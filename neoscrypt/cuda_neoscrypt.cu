@@ -370,14 +370,14 @@ void Blake2S(uint32_t *out, const uint32_t* const __restrict__  inout, const  ui
 
 	for (uint32_t x = 4U; x < 10U; x++)
 	{
-		BLAKE_G(x, 0x00, V.lo.s0, V.lo.s4, V.hi.s0, V.hi.s4, inout);
-		BLAKE_G(x, 0x02, V.lo.s1, V.lo.s5, V.hi.s1, V.hi.s5, inout);
-		BLAKE_G(x, 0x04, V.lo.s2, V.lo.s6, V.hi.s2, V.hi.s6, inout);
-		BLAKE_G(x, 0x06, V.lo.s3, V.lo.s7, V.hi.s3, V.hi.s7, inout);
-		BLAKE_G(x, 0x08, V.lo.s0, V.lo.s5, V.hi.s2, V.hi.s7, inout);
-		BLAKE_G(x, 0x0A, V.lo.s1, V.lo.s6, V.hi.s3, V.hi.s4, inout);
-		BLAKE_G(x, 0x0C, V.lo.s2, V.lo.s7, V.hi.s0, V.hi.s5, inout);
-		BLAKE_G(x, 0x0E, V.lo.s3, V.lo.s4, V.hi.s1, V.hi.s6, inout);
+		BLAKE_G(x, 0x00u, V.lo.s0, V.lo.s4, V.hi.s0, V.hi.s4, inout);
+		BLAKE_G(x, 0x02u, V.lo.s1, V.lo.s5, V.hi.s1, V.hi.s5, inout);
+		BLAKE_G(x, 0x04u, V.lo.s2, V.lo.s6, V.hi.s2, V.hi.s6, inout);
+		BLAKE_G(x, 0x06u, V.lo.s3, V.lo.s7, V.hi.s3, V.hi.s7, inout);
+		BLAKE_G(x, 0x08u, V.lo.s0, V.lo.s5, V.hi.s2, V.hi.s7, inout);
+		BLAKE_G(x, 0x0au, V.lo.s1, V.lo.s6, V.hi.s3, V.hi.s4, inout);
+		BLAKE_G(x, 0x0cu, V.lo.s2, V.lo.s7, V.hi.s0, V.hi.s5, inout);
+		BLAKE_G(x, 0x0eu, V.lo.s3, V.lo.s4, V.hi.s1, V.hi.s6, inout);
 	}
 
 	V.lo ^= V.hi ^ tmpblock;
@@ -1282,14 +1282,14 @@ static void Blake2Shost(uint32_t * inout, const uint32_t * inkey)
 
 	for (int x = 0; x < 10; ++x)
 	{
-		BLAKE_Ghost(x, 0x00, V.lo.s0, V.lo.s4, V.hi.s0, V.hi.s4, inkey);
-		BLAKE_Ghost(x, 0x02, V.lo.s1, V.lo.s5, V.hi.s1, V.hi.s5, inkey);
-		BLAKE_Ghost(x, 0x04, V.lo.s2, V.lo.s6, V.hi.s2, V.hi.s6, inkey);
-		BLAKE_Ghost(x, 0x06, V.lo.s3, V.lo.s7, V.hi.s3, V.hi.s7, inkey);
-		BLAKE_Ghost(x, 0x08, V.lo.s0, V.lo.s5, V.hi.s2, V.hi.s7, inkey);
-		BLAKE_Ghost(x, 0x0A, V.lo.s1, V.lo.s6, V.hi.s3, V.hi.s4, inkey);
-		BLAKE_Ghost(x, 0x0C, V.lo.s2, V.lo.s7, V.hi.s0, V.hi.s5, inkey);
-		BLAKE_Ghost(x, 0x0E, V.lo.s3, V.lo.s4, V.hi.s1, V.hi.s6, inkey);
+		BLAKE_Ghost(x, 0x00u, V.lo.s0, V.lo.s4, V.hi.s0, V.hi.s4, inkey);
+		BLAKE_Ghost(x, 0x02u, V.lo.s1, V.lo.s5, V.hi.s1, V.hi.s5, inkey);
+		BLAKE_Ghost(x, 0x04u, V.lo.s2, V.lo.s6, V.hi.s2, V.hi.s6, inkey);
+		BLAKE_Ghost(x, 0x06u, V.lo.s3, V.lo.s7, V.hi.s3, V.hi.s7, inkey);
+		BLAKE_Ghost(x, 0x08u, V.lo.s0, V.lo.s5, V.hi.s2, V.hi.s7, inkey);
+		BLAKE_Ghost(x, 0x0au, V.lo.s1, V.lo.s6, V.hi.s3, V.hi.s4, inkey);
+		BLAKE_Ghost(x, 0x0cu, V.lo.s2, V.lo.s7, V.hi.s0, V.hi.s5, inkey);
+		BLAKE_Ghost(x, 0x0eu, V.lo.s3, V.lo.s4, V.hi.s1, V.hi.s6, inkey);
 	}
 
 	V.lo ^= V.hi;
@@ -1303,14 +1303,14 @@ static void Blake2Shost(uint32_t * inout, const uint32_t * inkey)
 
 	for (int x = 0; x < 10; ++x)
 	{
-		BLAKE_Ghost(x, 0x00, V.lo.s0, V.lo.s4, V.hi.s0, V.hi.s4, inout);
-		BLAKE_Ghost(x, 0x02, V.lo.s1, V.lo.s5, V.hi.s1, V.hi.s5, inout);
-		BLAKE_Ghost(x, 0x04, V.lo.s2, V.lo.s6, V.hi.s2, V.hi.s6, inout);
-		BLAKE_Ghost(x, 0x06, V.lo.s3, V.lo.s7, V.hi.s3, V.hi.s7, inout);
-		BLAKE_Ghost(x, 0x08, V.lo.s0, V.lo.s5, V.hi.s2, V.hi.s7, inout);
-		BLAKE_Ghost(x, 0x0A, V.lo.s1, V.lo.s6, V.hi.s3, V.hi.s4, inout);
-		BLAKE_Ghost(x, 0x0C, V.lo.s2, V.lo.s7, V.hi.s0, V.hi.s5, inout);
-		BLAKE_Ghost(x, 0x0E, V.lo.s3, V.lo.s4, V.hi.s1, V.hi.s6, inout);
+		BLAKE_Ghost(x, 0x00u, V.lo.s0, V.lo.s4, V.hi.s0, V.hi.s4, inout);
+		BLAKE_Ghost(x, 0x02u, V.lo.s1, V.lo.s5, V.hi.s1, V.hi.s5, inout);
+		BLAKE_Ghost(x, 0x04u, V.lo.s2, V.lo.s6, V.hi.s2, V.hi.s6, inout);
+		BLAKE_Ghost(x, 0x06u, V.lo.s3, V.lo.s7, V.hi.s3, V.hi.s7, inout);
+		BLAKE_Ghost(x, 0x08u, V.lo.s0, V.lo.s5, V.hi.s2, V.hi.s7, inout);
+		BLAKE_Ghost(x, 0x0au, V.lo.s1, V.lo.s6, V.hi.s3, V.hi.s4, inout);
+		BLAKE_Ghost(x, 0x0cu, V.lo.s2, V.lo.s7, V.hi.s0, V.hi.s5, inout);
+		BLAKE_Ghost(x, 0x0eu, V.lo.s3, V.lo.s4, V.hi.s1, V.hi.s6, inout);
 	}
 
 	V.lo ^= V.hi ^ tmpblock;
