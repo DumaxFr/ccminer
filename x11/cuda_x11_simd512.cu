@@ -584,7 +584,7 @@ void Expansion(const uint32_t *data, uint4 *g_temp4)
 
 /***************************************************/
 
-__global__ __launch_bounds__(TPB, 4)
+__global__ __launch_bounds__(TPB, 8) /* 8 will force 64 registers on sm_50+ */
 void x11_simd512_gpu_expand_64(uint32_t threads, uint32_t *g_hash, uint4 *g_temp4)
 {
 	int threadBloc = (blockDim.x * blockIdx.x + threadIdx.x) / 8;
@@ -661,12 +661,14 @@ __global__ void x11_simd512_gpu_final_64(uint32_t threads, uint32_t *g_hash, uin
 __host__
 int x11_simd512_cpu_init(int thr_id, uint32_t threads)
 {
+    #if __CUDA_ARCH__ < 300
 	int dev_id = device_map[thr_id];
 	cuda_get_arch(thr_id);
 	if (device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300) {
 		x11_simd512_cpu_init_sm2(thr_id);
 		return 0;
 	}
+    #endif
 
 	CUDA_CALL_OR_RET_X(cudaMalloc(&d_temp4[thr_id], 64*sizeof(uint4)*threads), (int) err); /* todo: prevent -i 21 */
 	CUDA_CALL_OR_RET_X(cudaMalloc(&d_state[thr_id], 32*sizeof(int)*threads), (int) err);
@@ -714,10 +716,12 @@ void x11_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce,
 	dim3 grid((threads + threadsperblock-1) / threadsperblock);
 	dim3 gridX8(grid.x * 8);
 
-	if (d_nonceVector != NULL || device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300) {
+    #if __CUDA_ARCH__ < 300
+    if (d_nonceVector != NULL || device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300) {
 		x11_simd512_cpu_hash_64_sm2(thr_id, threads, startNounce, d_nonceVector, d_hash, order);
 		return;
 	}
+    #endif
 
 	x11_simd512_gpu_expand_64 <<<gridX8, block>>> (threads, d_hash, d_temp4[thr_id]);
 
