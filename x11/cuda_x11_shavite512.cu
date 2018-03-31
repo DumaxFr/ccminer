@@ -1394,7 +1394,7 @@ void x11_shavite512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t
 	}
 }
 
-__global__ __launch_bounds__(TPB, 7)
+__global__ __launch_bounds__(TPB, 6)
 void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *outputHash)
 {
 	__shared__ uint32_t sharedMemory[1024];

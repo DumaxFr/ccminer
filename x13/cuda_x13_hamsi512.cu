@@ -345,7 +345,7 @@ void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *
 			#pragma unroll 2
 			for (int u = 0; u < 8; u ++) {
 				db = h1[i+u];
-				#pragma unroll 2
+				//#pragma unroll 2
 				for (int v = 0; v < 8; v ++, db >>= 1) {
 					dm = -(uint32_t)(db & 1);
 					m0 ^= dm & *(tp+ 0); m1 ^= dm & *(tp+ 1);
@@ -360,11 +360,10 @@ void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *
 				}
 			}
 
-			for( int r = 0; r < 6; r += 2 ) {
-				ROUND_BIG(r, d_alpha_n);
-				ROUND_BIG(r+1, d_alpha_n);
-			}
-			T_BIG;
+            for (int r = 0; r < 6; r++) {
+                ROUND_BIG(r, d_alpha_n);
+            }
+            T_BIG;
 		}
 
 		// precomputed for 64 bytes blocks ?
@@ -378,9 +377,8 @@ void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *
 		mC = tp[12]; mD = tp[13];
 		mE = tp[14]; mF = tp[15];
 
-		for( int r = 0; r < 6; r += 2 ) {
+		for (int r = 0; r < 6; r++) {
 			ROUND_BIG(r, d_alpha_n);
-			ROUND_BIG(r+1, d_alpha_n);
 		}
 		T_BIG;
 
@@ -394,9 +392,8 @@ void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *
 		mC = tp[12]; mD = tp[13];
 		mE = tp[14]; mF = tp[15];
 
-		for( int r = 0; r < 12; r += 2 ) {
+		for (int r = 0; r < 12; r++) {
 			ROUND_BIG(r, d_alpha_f);
-			ROUND_BIG(r+1, d_alpha_f);
 		}
 		T_BIG;
 
@@ -461,10 +458,10 @@ void x16_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 			m8 = 0; m9 = 0; mA = 0; mB = 0; mC = 0; mD = 0; mE = 0; mF = 0;
 			tp = &d_T512[0][0];
 
-			#pragma unroll
+			#pragma unroll 2
 			for (int u = 0; u < 8; u++) {
 				db = h1[i + u];
-				#pragma unroll 2
+				//#pragma unroll 2
 				for (int v = 0; v < 8; v++, db >>= 1) {
 					dm = -(uint32_t)(db & 1);
 					m0 ^= dm & tp[ 0]; m1 ^= dm & tp[ 1];
@@ -479,7 +476,7 @@ void x16_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 				}
 			}
 
-			#pragma unroll
+			//#pragma unroll
 			for (int r = 0; r < 6; r++) {
 				ROUND_BIG(r, d_alpha_n);
 			}
