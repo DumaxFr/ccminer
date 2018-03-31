@@ -315,7 +315,7 @@ extern "C" {
     extern int scanhash_x13(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_x14(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_x15(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
-    extern int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
+    extern int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done, const char variation);
     extern int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_zr5(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
 
@@ -925,7 +925,7 @@ extern "C" {
     void x13hash(void *output, const void *input);
     void x14hash(void *output, const void *input);
     void x15hash(void *output, const void *input);
-    void x16r_hash(void *output, const void *input);
+    void x16x_hash(void *output, const void *input, const char variation);
     void x17hash(void *output, const void *input);
     void wildkeccak_hash(void *output, const void *input, uint64_t* scratchpad, uint64_t ssize);
     void zr5hash(void *output, const void *input);

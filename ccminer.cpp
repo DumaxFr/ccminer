@@ -294,6 +294,7 @@ Options:\n\
 			x14         X14\n\
 			x15         X15\n\
 			x16r        X16R (Raven)\n\
+			x16s        X16S (Pigeon)\n\
 			x17         X17\n\
 			wildkeccak  Boolberry\n\
 			zr5         ZR5 (ZiftrCoin)\n\
@@ -1706,8 +1707,9 @@ static bool stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		case ALGO_LYRA2Z:
 		case ALGO_TIMETRAVEL:
 		case ALGO_BITCORE:
-		case ALGO_X16R:
-			work_set_target(work, sctx->job.diff / (256.0 * opt_difficulty));
+        case ALGO_X16R:
+        case ALGO_X16S:
+            work_set_target(work, sctx->job.diff / (256.0 * opt_difficulty));
 			break;
 		case ALGO_KECCAK:
 		case ALGO_LYRA2:
@@ -2501,10 +2503,13 @@ static void *miner_thread(void *userdata)
 		case ALGO_X15:
 			rc = scanhash_x15(thr_id, &work, max_nonce, &hashes_done);
 			break;
-		case ALGO_X16R:
-			rc = scanhash_x16r(thr_id, &work, max_nonce, &hashes_done);
-			break;
-		case ALGO_X17:
+        case ALGO_X16R:
+            rc = scanhash_x16x(thr_id, &work, max_nonce, &hashes_done, 'r');
+            break;
+        case ALGO_X16S:
+            rc = scanhash_x16x(thr_id, &work, max_nonce, &hashes_done, 's');
+            break;
+        case ALGO_X17:
 			rc = scanhash_x17(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_ZR5:
@@ -3866,7 +3871,7 @@ int main(int argc, char *argv[])
 	// get opt_quiet early
 	parse_single_opt('q', argc, argv);
 
-	printf("*** ccminer " PACKAGE_VERSION " for nVidia GPUs by tpruvot@github ***\n");
+	printf("*** " PACKAGE_NAME " " PACKAGE_VERSION " for nVidia GPUs by DumaxFr@github ***\n");
 	if (!opt_quiet) {
 		const char* arch = is_x64() ? "64-bits" : "32-bits";
 #ifdef _MSC_VER
@@ -3875,10 +3880,13 @@ int main(int argc, char *argv[])
 		printf("    Built with the nVidia CUDA Toolkit %d.%d %s\n\n",
 #endif
 			CUDART_VERSION/1000, (CUDART_VERSION % 1000)/10, arch);
-		printf("  Originally based on Christian Buchner and Christian H. project\n");
-		printf("  Include some kernels from alexis78, djm34, djEzo, tsiv and krnlx.\n\n");
-		printf("BTC donation address: 1AJdfCpLWPNoAMDfHF1wD5y8VgKSSTHxPo (tpruvot)\n\n");
-	}
+        printf("  Based on a tpruvot/ccminer fork\n");
+        printf("  Originally based on Christian Buchner and Christian H. project\n");
+        printf("  Include some kernels from alexis78, djm34, djEzo, tsiv and krnlx.\n\n");
+        printf("BTC donation address: 1AJdfCpLWPNoAMDfHF1wD5y8VgKSSTHxPo (tpruvot)\n\n");
+        printf("RVN donation address: RQXpsvSaVrGYo4tyGityWDNBQMFcnqANyj (DumaxFr)\n");
+        printf("BTC donation address: 1AtQXFbnzYTsjzy2bzSH6nPGxqZ32NG42T (DumaxFr)\n\n");
+    }
 
 	rpc_user = strdup("");
 	rpc_pass = strdup("");

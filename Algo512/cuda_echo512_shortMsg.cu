@@ -2,8 +2,7 @@
 * Echo512 cuda kernel for short messages
 * 
 * 80 & 64 bytes messages implemented with precalculations
-* Code ready for message length from 8 to 
-* 
+* Code ready for message length from 8 to 96 bytes
 *
 * DumaxFr@github 2018
 * Based on tpruvot 2018 - GPL code

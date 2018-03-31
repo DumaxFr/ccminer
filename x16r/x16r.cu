@@ -79,7 +79,7 @@ static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread bool s_implemented = false;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 
-static void getAlgoString(const uint32_t* prevblock, char *output) {
+static void getAlgoString16r(const uint32_t* prevblock, char *output) {
     char *sptr = output;
     uint8_t* data = (uint8_t*)prevblock;
 
@@ -95,8 +95,36 @@ static void getAlgoString(const uint32_t* prevblock, char *output) {
     *sptr = '\0';
 }
 
-// X16R CPU Hash (Validation)
-extern "C" void x16r_hash(void *output, const void *input) {
+static void getAlgoString16s(const uint32_t* prevblock, char *output) {
+
+    char *ptrHash = output;
+    uint8_t* data = (uint8_t*)prevblock;
+
+    strcpy(ptrHash, "0123456789ABCDEF");
+
+    for (int j = 0; j < HASH_FUNC_COUNT; j++) {
+        uint8_t b = (15 - j) >> 1;
+        uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
+        if (algoDigit > 0) {
+            char pull = ptrHash[algoDigit];
+            for (int i = algoDigit; i > 0; i--) {
+                ptrHash[i] = ptrHash[i-1];
+            }
+            ptrHash[0] = pull;
+        }
+    }
+
+}
+
+static void getAlgoString(const uint32_t* prevblock, char *output, const char baseAlgo) {
+    if (baseAlgo == 'r')
+        getAlgoString16r(prevblock, output);
+    else
+        getAlgoString16s(prevblock, output);
+}
+
+// X16x CPU Hash (Validation)
+extern "C" void x16x_hash(void *output, const void *input, const char variation) {
     unsigned char _ALIGN(64) hash[128];
 
     sph_blake512_context ctx_blake;
@@ -120,7 +148,7 @@ extern "C" void x16r_hash(void *output, const void *input) {
     int size = 80;
 
     uint32_t *in32 = (uint32_t*)input;
-    getAlgoString(&in32[1], hashOrder);
+    getAlgoString(&in32[1], hashOrder, variation);
 
     for (int i = 0; i < 16; i++) {
         const char elem = hashOrder[i];
@@ -247,7 +275,7 @@ static cudaEvent_t x16r_kernel_stop[MAX_GPUS];
 
 
 
-extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done) {
+extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done, const char variation) {
     uint32_t *pdata = work->data;
     uint32_t *ptarget = work->target;
     const uint32_t first_nonce = pdata[19];
@@ -308,7 +336,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
     uint32_t ntime = swab32(pdata[17]);
     if (s_ntime != ntime) {
-        getAlgoString(&endiandata[1], hashOrder);
+        getAlgoString(&endiandata[1], hashOrder, variation);
         s_ntime = ntime;
         s_implemented = true;
         if (opt_debug && !thr_id) {
@@ -592,7 +620,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
             const uint32_t Htarg = ptarget[7];
             uint32_t _ALIGN(64) vhash[8];
             be32enc(&endiandata[19], work->nonces[0]);
-            x16r_hash(vhash, endiandata);
+            x16x_hash(vhash, endiandata, variation);
 
             if (vhash[7] <= Htarg && fulltest(vhash, ptarget)) {
                 work->valid_nonces = 1;
@@ -600,7 +628,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
                 work_set_target_ratio(work, vhash);
                 if (work->nonces[1] != 0) {
                     be32enc(&endiandata[19], work->nonces[1]);
-                    x16r_hash(vhash, endiandata);
+                    x16x_hash(vhash, endiandata, variation);
                     bn_set_target_ratio(work, vhash, 1);
                     work->valid_nonces++;
                     pdata[19] = max(work->nonces[0], work->nonces[1]) + 1;
