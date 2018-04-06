@@ -1,4 +1,5 @@
 #include "x11/cuda_x11.h"
+#include "Algo512\cuda_echo512_shortMsg.h"
 
 extern void x13_hamsi512_cpu_init(int thr_id, uint32_t threads);
 extern void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
@@ -21,8 +22,6 @@ extern void x17_haval256_cpu_init(int thr_id, uint32_t threads);
 extern void x17_haval256_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const int outlen);
 
 void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_outputHash, int order);
-
-void echo512_cpu_hash_64(const uint32_t threads, uint32_t *d_hash);
 
 // ---- 80 bytes kernels
 
@@ -56,10 +55,6 @@ void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32
 
 void x16_simd512_setBlock_80(void *pdata);
 void x16_simd512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
-
-void echo512_cuda_init(int thr_id);
-void echo512_setBlock_80(void *pdata);
-void echo512_cuda_hash_80(const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
 
 void x16_hamsi512_setBlock_80(void *pdata);
 void x16_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);

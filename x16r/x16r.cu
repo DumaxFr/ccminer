@@ -305,7 +305,7 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
         x11_shavite512_cpu_init(thr_id, throughput);
         x11_simd512_cpu_init(thr_id, throughput); // 64
         x11_echo512_cpu_init(thr_id, throughput);
-        echo512_cuda_init(thr_id);
+        echo512_cpu_init(thr_id);
         x13_hamsi512_cpu_init(thr_id, throughput);
         x13_fugue512_cpu_init(thr_id, throughput);
         x16_fugue512_cpu_init(thr_id, throughput);
@@ -612,7 +612,7 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
         #ifdef _DEBUG
         uint32_t _ALIGN(64) dhash[8];
         be32enc(&endiandata[19], pdata[19]);
-        x16r_hash(dhash, endiandata);
+        x16x_hash(dhash, endiandata, variation);
         applog_hash(dhash);
         return -1;
         #endif

@@ -602,6 +602,7 @@
     <ClInclude Include="x16r\cuda_x16r.h">
       <Filter>Header Files\CUDA</Filter>
     </ClInclude>
+    <ClInclude Include="Algo512\cuda_echo512_shortMsg.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda.cpp">

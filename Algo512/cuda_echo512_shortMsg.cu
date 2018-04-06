@@ -333,7 +333,7 @@ void echo_gpu_init(uint32_t *const __restrict__ sharedMemory) {
 }
 
 __host__
-void echo512_cuda_init(int thr_id) {
+void echo512_cpu_init(int thr_id) {
     aes_cpu_init(thr_id);
 }
 

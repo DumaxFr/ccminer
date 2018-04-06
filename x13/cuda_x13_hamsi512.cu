@@ -9,24 +9,26 @@
 
 #include "cuda_helper.h"
 
-typedef unsigned char BitSequence;
+//#if __INTELLISENSE__
+//#define __CUDA_ARCH__ 700
+//#endif // __INTELLISENSE__
 
 static __constant__ uint32_t d_alpha_n[32];
 static __constant__ uint32_t d_alpha_f[32];
 static __constant__ uint32_t d_T512[64][16];
 
 static const uint32_t alpha_n[] = {
-	0xff00f0f0, 0xccccaaaa, 0xf0f0cccc, 0xff00aaaa, 0xccccaaaa, 0xf0f0ff00, 0xaaaacccc, 0xf0f0ff00,
-	0xf0f0cccc, 0xaaaaff00, 0xccccff00, 0xaaaaf0f0, 0xaaaaf0f0, 0xff00cccc, 0xccccf0f0, 0xff00aaaa,
-	0xccccaaaa, 0xff00f0f0, 0xff00aaaa, 0xf0f0cccc, 0xf0f0ff00, 0xccccaaaa, 0xf0f0ff00, 0xaaaacccc,
-	0xaaaaff00, 0xf0f0cccc, 0xaaaaf0f0, 0xccccff00, 0xff00cccc, 0xaaaaf0f0, 0xff00aaaa, 0xccccf0f0
+    0xff00f0f0, 0xccccaaaa, 0xf0f0cccc, 0xff00aaaa, 0xccccaaaa, 0xf0f0ff00, 0xaaaacccc, 0xf0f0ff00,
+    0xf0f0cccc, 0xaaaaff00, 0xccccff00, 0xaaaaf0f0, 0xaaaaf0f0, 0xff00cccc, 0xccccf0f0, 0xff00aaaa,
+    0xccccaaaa, 0xff00f0f0, 0xff00aaaa, 0xf0f0cccc, 0xf0f0ff00, 0xccccaaaa, 0xf0f0ff00, 0xaaaacccc,
+    0xaaaaff00, 0xf0f0cccc, 0xaaaaf0f0, 0xccccff00, 0xff00cccc, 0xaaaaf0f0, 0xff00aaaa, 0xccccf0f0
 };
 
 static const uint32_t alpha_f[] = {
-	0xcaf9639c, 0x0ff0f9c0, 0x639c0ff0, 0xcaf9f9c0, 0x0ff0f9c0, 0x639ccaf9, 0xf9c00ff0, 0x639ccaf9,
-	0x639c0ff0, 0xf9c0caf9, 0x0ff0caf9, 0xf9c0639c, 0xf9c0639c, 0xcaf90ff0, 0x0ff0639c, 0xcaf9f9c0,
-	0x0ff0f9c0, 0xcaf9639c, 0xcaf9f9c0, 0x639c0ff0, 0x639ccaf9, 0x0ff0f9c0, 0x639ccaf9, 0xf9c00ff0,
-	0xf9c0caf9, 0x639c0ff0, 0xf9c0639c, 0x0ff0caf9, 0xcaf90ff0, 0xf9c0639c, 0xcaf9f9c0, 0x0ff0639c
+    0xcaf9639c, 0x0ff0f9c0, 0x639c0ff0, 0xcaf9f9c0, 0x0ff0f9c0, 0x639ccaf9, 0xf9c00ff0, 0x639ccaf9,
+    0x639c0ff0, 0xf9c0caf9, 0x0ff0caf9, 0xf9c0639c, 0xf9c0639c, 0xcaf90ff0, 0x0ff0639c, 0xcaf9f9c0,
+    0x0ff0f9c0, 0xcaf9639c, 0xcaf9f9c0, 0x639c0ff0, 0x639ccaf9, 0x0ff0f9c0, 0x639ccaf9, 0xf9c00ff0,
+    0xf9c0caf9, 0x639c0ff0, 0xf9c0639c, 0x0ff0caf9, 0xcaf90ff0, 0xf9c0639c, 0xcaf9f9c0, 0x0ff0639c
 };
 
 #define hamsi_s00   m0
@@ -153,16 +155,6 @@ static const uint32_t alpha_f[] = {
 		HAMSI_L(hamsi_s19, hamsi_s1A, hamsi_s1C, hamsi_s1F); \
 	}
 
-
-#define P_BIG  { \
-		for( int r = 0; r < 6; r++ ) \
-			ROUND_BIG(r, d_alpha_n); \
-	}
-
-#define PF_BIG { \
-		for( int r = 0; r < 12; r++ ) \
-			ROUND_BIG(r, d_alpha_f); \
-	}
 
 #define T_BIG  { \
 		/* order is important */ \
@@ -316,174 +308,193 @@ static const uint32_t T512[64][16] = {
   0x95bb0000, 0x81450000, 0x3b240000, 0x48db0140, 0x0a8a6c53, 0x56f56eec, 0x62c91877, 0xe7e00a94 }
 };
 
+#if (defined(_MSC_VER) && defined(_WIN64)) || defined(__LP64__) || defined(__CUDACC_RTC__)
+#define __LDG_PTR   "l"
+#else
+#define __LDG_PTR   "r"
+#endif
+
 __global__
-void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *g_hash, uint32_t *g_nonceVector)
-{
-	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-	if (thread < threads)
-	{
-		uint32_t nounce = (g_nonceVector != NULL) ? g_nonceVector[thread] : (startNounce + thread);
+void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *g_hash, uint32_t *g_nonceVector) {
 
-		int hashPosition = nounce - startNounce;
-		uint32_t *Hash = (uint32_t*)&g_hash[hashPosition<<3];
-		unsigned char *h1 = (unsigned char *)Hash;
+    uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
-		uint32_t c0 = 0x73746565, c1 = 0x6c706172, c2 = 0x6b204172, c3 = 0x656e6265;
-		uint32_t c4 = 0x72672031, c5 = 0x302c2062, c6 = 0x75732032, c7 = 0x3434362c;
-		uint32_t c8 = 0x20422d33, c9 = 0x30303120, cA = 0x4c657576, cB = 0x656e2d48;
-		uint32_t cC = 0x65766572, cD = 0x6c65652c, cE = 0x2042656c, cF = 0x6769756d;
-		uint32_t h[16] = { c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, cA, cB, cC, cD, cE, cF };
-		uint32_t m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, mA, mB, mC, mD, mE, mF;
-		uint32_t *tp, db, dm;
+    if (thread < threads) {
+        uint32_t nounce = (g_nonceVector != NULL) ? g_nonceVector[thread] : (startNounce + thread);
 
-		for(int i = 0; i < 64; i += 8) {
+        int hashPosition = nounce - startNounce;
+        uint32_t *pHash = (uint32_t*)&g_hash[hashPosition << 3];
+        unsigned char *hByte = (unsigned char *)pHash;
 
-			m0 = 0; m1 = 0; m2 = 0; m3 = 0; m4 = 0; m5 = 0; m6 = 0; m7 = 0;
-			m8 = 0; m9 = 0; mA = 0; mB = 0; mC = 0; mD = 0; mE = 0; mF = 0;
-			tp = &d_T512[0][0];
+        #if __CUDA_ARCH__ >= 350
+        asm("prefetch.global.L1 [%0];" : : __LDG_PTR(pHash));
+        #endif // __CUDA_ARCH__ >= 350
 
-			#pragma unroll 2
-			for (int u = 0; u < 8; u ++) {
-				db = h1[i+u];
-				//#pragma unroll 2
-				for (int v = 0; v < 8; v ++, db >>= 1) {
-					dm = -(uint32_t)(db & 1);
-					m0 ^= dm & *(tp+ 0); m1 ^= dm & *(tp+ 1);
-					m2 ^= dm & *(tp+ 2); m3 ^= dm & *(tp+ 3);
-					m4 ^= dm & *(tp+ 4); m5 ^= dm & *(tp+ 5);
-					m6 ^= dm & *(tp+ 6); m7 ^= dm & *(tp+ 7);
-					m8 ^= dm & *(tp+ 8); m9 ^= dm & *(tp+ 9);
-					mA ^= dm & *(tp+10); mB ^= dm & *(tp+11);
-					mC ^= dm & *(tp+12); mD ^= dm & *(tp+13);
-					mE ^= dm & *(tp+14); mF ^= dm & *(tp+15);
-					tp += 16;
-				}
-			}
+
+        uint32_t c0 = 0x73746565, c1 = 0x6c706172, c2 = 0x6b204172, c3 = 0x656e6265;
+        uint32_t c4 = 0x72672031, c5 = 0x302c2062, c6 = 0x75732032, c7 = 0x3434362c;
+        uint32_t c8 = 0x20422d33, c9 = 0x30303120, cA = 0x4c657576, cB = 0x656e2d48;
+        uint32_t cC = 0x65766572, cD = 0x6c65652c, cE = 0x2042656c, cF = 0x6769756d;
+        uint32_t h[16] = { c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, cA, cB, cC, cD, cE, cF };
+        uint32_t m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, mA, mB, mC, mD, mE, mF;
+        uint32_t *tp, db, dm;
+
+        for (int i = 0; i < 64; ) {
+
+            m0 = 0; m1 = 0; m2 = 0; m3 = 0; m4 = 0; m5 = 0; m6 = 0; m7 = 0;
+            m8 = 0; m9 = 0; mA = 0; mB = 0; mC = 0; mD = 0; mE = 0; mF = 0;
+            tp = &d_T512[0][0];
+
+            uint32_t preload[2];
+            asm("ld.global.v2.u32 {%0, %1}, [%2];"
+                : "=r"(preload[0]), "=r"(preload[1])
+                : __LDG_PTR(&pHash[i>>2]) );
+
+            // Essayer avec premiere assignation mX et retablir unroll dans la boucle
+
+            do {
+                db = ((unsigned char *)&preload[0])[i % 8];
+                //db = hByte[i];
+                //#pragma unroll 2
+                for (int v = 0; v < 8; v++, db >>= 1) {
+                    dm = -(uint32_t)(db & 1);
+                    m0 ^= dm & *(tp + 0); m1 ^= dm & *(tp + 1);
+                    m2 ^= dm & *(tp + 2); m3 ^= dm & *(tp + 3);
+                    m4 ^= dm & *(tp + 4); m5 ^= dm & *(tp + 5);
+                    m6 ^= dm & *(tp + 6); m7 ^= dm & *(tp + 7);
+                    m8 ^= dm & *(tp + 8); m9 ^= dm & *(tp + 9);
+                    mA ^= dm & *(tp + 10); mB ^= dm & *(tp + 11);
+                    mC ^= dm & *(tp + 12); mD ^= dm & *(tp + 13);
+                    mE ^= dm & *(tp + 14); mF ^= dm & *(tp + 15);
+                    tp += 16;
+                }
+                i++;
+            } while (i % 8 != 0);
 
             for (int r = 0; r < 6; r++) {
                 ROUND_BIG(r, d_alpha_n);
             }
             T_BIG;
-		}
+        }
 
-		// precomputed for 64 bytes blocks ?
-		tp = &d_T512[0][0] + 112;
-		m0 = tp[ 0]; m1 = tp[ 1];
-		m2 = tp[ 2]; m3 = tp[ 3];
-		m4 = tp[ 4]; m5 = tp[ 5];
-		m6 = tp[ 6]; m7 = tp[ 7];
-		m8 = tp[ 8]; m9 = tp[ 9];
-		mA = tp[10]; mB = tp[11];
-		mC = tp[12]; mD = tp[13];
-		mE = tp[14]; mF = tp[15];
+        // precomputed for 64 bytes blocks ?
+        tp = &d_T512[0][0] + 112;
+        m0 = tp[0]; m1 = tp[1];
+        m2 = tp[2]; m3 = tp[3];
+        m4 = tp[4]; m5 = tp[5];
+        m6 = tp[6]; m7 = tp[7];
+        m8 = tp[8]; m9 = tp[9];
+        mA = tp[10]; mB = tp[11];
+        mC = tp[12]; mD = tp[13];
+        mE = tp[14]; mF = tp[15];
 
-		for (int r = 0; r < 6; r++) {
-			ROUND_BIG(r, d_alpha_n);
-		}
-		T_BIG;
+        for (int r = 0; r < 6; r++) {
+            ROUND_BIG(r, d_alpha_n);
+        }
+        T_BIG;
 
-		tp = &d_T512[0][0] + 784;
-		m0 = tp[ 0]; m1 = tp[ 1];
-		m2 = tp[ 2]; m3 = tp[ 3];
-		m4 = tp[ 4]; m5 = tp[ 5];
-		m6 = tp[ 6]; m7 = tp[ 7];
-		m8 = tp[ 8]; m9 = tp[ 9];
-		mA = tp[10]; mB = tp[11];
-		mC = tp[12]; mD = tp[13];
-		mE = tp[14]; mF = tp[15];
+        tp = &d_T512[0][0] + 784;
+        m0 = tp[0]; m1 = tp[1];
+        m2 = tp[2]; m3 = tp[3];
+        m4 = tp[4]; m5 = tp[5];
+        m6 = tp[6]; m7 = tp[7];
+        m8 = tp[8]; m9 = tp[9];
+        mA = tp[10]; mB = tp[11];
+        mC = tp[12]; mD = tp[13];
+        mE = tp[14]; mF = tp[15];
 
-		for (int r = 0; r < 12; r++) {
-			ROUND_BIG(r, d_alpha_f);
-		}
-		T_BIG;
+        for (int r = 0; r < 12; r++) {
+            ROUND_BIG(r, d_alpha_f);
+        }
+        T_BIG;
 
-		#pragma unroll 16
-		for (int i = 0; i < 16; i++)
-			Hash[i] = cuda_swab32(h[i]);
-	}
+        #pragma unroll 8
+        for (int i = 0; i < 16; i += 2) {
+            uint32_t outH[2];
+            outH[0] = cuda_swab32(h[i]);
+            outH[1] = cuda_swab32(h[i + 1]);
+            AS_UINT2(&pHash[i]) = AS_UINT2(outH);
+        }
+
+    }
+}
+
+#undef __LDG_PTR
+
+__host__
+void x13_hamsi512_cpu_init(int thr_id, uint32_t threads) {
+    cudaMemcpyToSymbol(d_alpha_n, alpha_n, sizeof(uint32_t) * 32, 0, cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(d_alpha_f, alpha_f, sizeof(uint32_t) * 32, 0, cudaMemcpyHostToDevice);
+    CUDA_SAFE_CALL(cudaMemcpyToSymbol(d_T512, T512, sizeof(uint32_t) * 64 * 16, 0, cudaMemcpyHostToDevice));
 }
 
 __host__
-void x13_hamsi512_cpu_init(int thr_id, uint32_t threads)
-{
-	cudaMemcpyToSymbol(d_alpha_n, alpha_n, sizeof(uint32_t)*32, 0, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(d_alpha_f, alpha_f, sizeof(uint32_t)*32, 0, cudaMemcpyHostToDevice);
-	CUDA_SAFE_CALL(cudaMemcpyToSymbol(d_T512, T512, sizeof(uint32_t)*64*16, 0, cudaMemcpyHostToDevice));
-}
+void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order) {
+    const uint32_t threadsperblock = 128;
 
-__host__
-void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order)
-{
-	const uint32_t threadsperblock = 128;
+    dim3 grid((threads + threadsperblock - 1) / threadsperblock);
+    dim3 block(threadsperblock);
 
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
-
-	x13_hamsi512_gpu_hash_64<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
-	//MyStreamSynchronize(NULL, order, thr_id);
+    x13_hamsi512_gpu_hash_64 <<<grid, block>>> (threads, startNounce, (uint64_t *)d_hash, d_nonceVector);
 }
 
 __constant__ static uint64_t c_PaddedMessage80[10];
 
 __host__
-void x16_hamsi512_setBlock_80(void *pdata)
-{
-	cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
+void x16_hamsi512_setBlock_80(void *pdata) {
+    cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
 
 __global__
-void x16_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
-{
-	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-	if (thread < threads)
-	{
-		unsigned char h1[80];
-		#pragma unroll
-		for (int i = 0; i < 10; i++)
-			((uint2*)h1)[i] = ((uint2*)c_PaddedMessage80)[i];
-		//((uint64_t*)h1)[9] = REPLACE_HIDWORD(c_PaddedMessage80[9], cuda_swab32(startNonce + thread));
-		((uint32_t*)h1)[19] = cuda_swab32(startNonce + thread);
+void x16_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint32_t *g_hash) {
+    uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
+    if (thread < threads) {
+        unsigned char h1[80];
+        #pragma unroll
+        for (int i = 0; i < 10; i++)
+            ((uint2*)h1)[i] = ((uint2*)c_PaddedMessage80)[i];
+        //((uint64_t*)h1)[9] = REPLACE_HIDWORD(c_PaddedMessage80[9], cuda_swab32(startNonce + thread));
+        ((uint32_t*)h1)[19] = cuda_swab32(startNonce + thread);
 
-		uint32_t c0 = 0x73746565, c1 = 0x6c706172, c2 = 0x6b204172, c3 = 0x656e6265;
-		uint32_t c4 = 0x72672031, c5 = 0x302c2062, c6 = 0x75732032, c7 = 0x3434362c;
-		uint32_t c8 = 0x20422d33, c9 = 0x30303120, cA = 0x4c657576, cB = 0x656e2d48;
-		uint32_t cC = 0x65766572, cD = 0x6c65652c, cE = 0x2042656c, cF = 0x6769756d;
-		uint32_t h[16] = { c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, cA, cB, cC, cD, cE, cF };
-		uint32_t m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, mA, mB, mC, mD, mE, mF;
-		uint32_t *tp, db, dm;
+        uint32_t c0 = 0x73746565, c1 = 0x6c706172, c2 = 0x6b204172, c3 = 0x656e6265;
+        uint32_t c4 = 0x72672031, c5 = 0x302c2062, c6 = 0x75732032, c7 = 0x3434362c;
+        uint32_t c8 = 0x20422d33, c9 = 0x30303120, cA = 0x4c657576, cB = 0x656e2d48;
+        uint32_t cC = 0x65766572, cD = 0x6c65652c, cE = 0x2042656c, cF = 0x6769756d;
+        uint32_t h[16] = { c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, cA, cB, cC, cD, cE, cF };
+        uint32_t m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, mA, mB, mC, mD, mE, mF;
+        uint32_t *tp, db, dm;
 
-		for(int i = 0; i < 80; i += 8)
-		{
-			m0 = 0; m1 = 0; m2 = 0; m3 = 0; m4 = 0; m5 = 0; m6 = 0; m7 = 0;
-			m8 = 0; m9 = 0; mA = 0; mB = 0; mC = 0; mD = 0; mE = 0; mF = 0;
-			tp = &d_T512[0][0];
+        for (int i = 0; i < 80; i += 8) {
+            m0 = 0; m1 = 0; m2 = 0; m3 = 0; m4 = 0; m5 = 0; m6 = 0; m7 = 0;
+            m8 = 0; m9 = 0; mA = 0; mB = 0; mC = 0; mD = 0; mE = 0; mF = 0;
+            tp = &d_T512[0][0];
 
-			#pragma unroll 2
-			for (int u = 0; u < 8; u++) {
-				db = h1[i + u];
-				//#pragma unroll 2
-				for (int v = 0; v < 8; v++, db >>= 1) {
-					dm = -(uint32_t)(db & 1);
-					m0 ^= dm & tp[ 0]; m1 ^= dm & tp[ 1];
-					m2 ^= dm & tp[ 2]; m3 ^= dm & tp[ 3];
-					m4 ^= dm & tp[ 4]; m5 ^= dm & tp[ 5];
-					m6 ^= dm & tp[ 6]; m7 ^= dm & tp[ 7];
-					m8 ^= dm & tp[ 8]; m9 ^= dm & tp[ 9];
-					mA ^= dm & tp[10]; mB ^= dm & tp[11];
-					mC ^= dm & tp[12]; mD ^= dm & tp[13];
-					mE ^= dm & tp[14]; mF ^= dm & tp[15];
-					tp += 16;
-				}
-			}
+            #pragma unroll 2
+            for (int u = 0; u < 8; u++) {
+                db = h1[i + u];
+                //#pragma unroll 2
+                for (int v = 0; v < 8; v++, db >>= 1) {
+                    dm = -(uint32_t)(db & 1);
+                    m0 ^= dm & tp[0]; m1 ^= dm & tp[1];
+                    m2 ^= dm & tp[2]; m3 ^= dm & tp[3];
+                    m4 ^= dm & tp[4]; m5 ^= dm & tp[5];
+                    m6 ^= dm & tp[6]; m7 ^= dm & tp[7];
+                    m8 ^= dm & tp[8]; m9 ^= dm & tp[9];
+                    mA ^= dm & tp[10]; mB ^= dm & tp[11];
+                    mC ^= dm & tp[12]; mD ^= dm & tp[13];
+                    mE ^= dm & tp[14]; mF ^= dm & tp[15];
+                    tp += 16;
+                }
+            }
 
-			//#pragma unroll
-			for (int r = 0; r < 6; r++) {
-				ROUND_BIG(r, d_alpha_n);
-			}
-			T_BIG;
-		}
+            //#pragma unroll
+            for (int r = 0; r < 6; r++) {
+                ROUND_BIG(r, d_alpha_n);
+            }
+            T_BIG;
+        }
 
-		#define INPUT_BIG { \
+        #define INPUT_BIG { \
 			m0 = 0; m1 = 0; m2 = 0; m3 = 0; m4 = 0; m5 = 0; m6 = 0; m7 = 0; \
 			m8 = 0; m9 = 0; mA = 0; mB = 0; mC = 0; mD = 0; mE = 0; mF = 0; \
 			tp = &d_T512[0][0]; \
@@ -504,45 +515,48 @@ void x16_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 			} \
 		}
 
-		// close
-		uint8_t endtag[8] = { 0x80, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00 };
-		INPUT_BIG;
+        // close
+        uint8_t endtag[8] = { 0x80, 0x00, 0x00, 0x00,  0x00, 0x00, 0x00, 0x00 };
+        INPUT_BIG;
 
-		#pragma unroll
-		for (int r = 0; r < 6; r++) {
-			ROUND_BIG(r, d_alpha_n);
-		}
-		T_BIG;
+        #pragma unroll
+        for (int r = 0; r < 6; r++) {
+            ROUND_BIG(r, d_alpha_n);
+        }
+        T_BIG;
 
-		endtag[0] = endtag[1] = 0x00;
-		endtag[6] = 0x02;
-		endtag[7] = 0x80;
-		INPUT_BIG;
+        endtag[0] = endtag[1] = 0x00;
+        endtag[6] = 0x02;
+        endtag[7] = 0x80;
+        INPUT_BIG;
 
-		// PF_BIG
-		#pragma unroll
-		for(int r = 0; r < 12; r++) {
-			ROUND_BIG(r, d_alpha_f);
-		}
-		T_BIG;
+        // PF_BIG
+        #pragma unroll
+        for (int r = 0; r < 12; r++) {
+            ROUND_BIG(r, d_alpha_f);
+        }
+        T_BIG;
 
-		uint64_t hashPosition = thread;
-		uint32_t *Hash = (uint32_t*)&g_hash[hashPosition << 3];
-		#pragma unroll 16
-		for(int i = 0; i < 16; i++)
-			Hash[i] = cuda_swab32(h[i]);
+        uint32_t *Hash = &g_hash[thread << 4];
 
-		#undef INPUT_BIG
-	}
+        #pragma unroll 8
+        for (int i = 0; i < 16; i += 2) {
+            uint32_t outH[2];
+            outH[0] = cuda_swab32(h[i]);
+            outH[1] = cuda_swab32(h[i + 1]);
+            AS_UINT2(&Hash[i]) = AS_UINT2(outH);
+        }
+
+        #undef INPUT_BIG
+    }
 }
 
 __host__
-void x16_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
-{
-	const uint32_t threadsperblock = 128;
+void x16_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash) {
+    const uint32_t threadsperblock = 128;
 
-	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
-	dim3 block(threadsperblock);
+    dim3 grid((threads + threadsperblock - 1) / threadsperblock);
+    dim3 block(threadsperblock);
 
-	x16_hamsi512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*)d_hash);
+    x16_hamsi512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, d_hash);
 }

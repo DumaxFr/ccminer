@@ -29,6 +29,7 @@ extern "C" {
 #include "miner.h"
 #include "cuda_helper.h"
 #include "x11/cuda_x11.h"
+#include "Algo512\cuda_echo512_shortMsg.h"
 
 static uint32_t *d_hash[MAX_GPUS];
 
@@ -152,6 +153,54 @@ extern "C" void x17hash(void *output, const void *input)
 
 static bool init[MAX_GPUS] = { 0 };
 
+#ifdef _PROFILE_METRICS
+#define _PROFILE_METRICS_X17
+#endif // _PROFILE_METRICS
+
+#ifdef _PROFILE_METRICS_X17
+#define HASH_FUNC_COUNT 16
+static float avgDuration64[HASH_FUNC_COUNT][MAX_GPUS] = { 0.0f };
+static long totalRuns64[HASH_FUNC_COUNT][MAX_GPUS] = { 0l };
+
+static cudaEvent_t x16r_kernel_start[MAX_GPUS];
+static cudaEvent_t x16r_kernel_stop[MAX_GPUS];
+
+#define START_METRICS { \
+    if (opt_debug) { \
+        milliseconds = 0.0; \
+        cudaEventCreate(&x16r_kernel_start[thr_id]); \
+        cudaEventCreate(&x16r_kernel_stop[thr_id]); \
+        cudaEventRecord(x16r_kernel_start[thr_id]); \
+    } \
+}
+
+#define STOP_METRICS(kid) { \
+    if (opt_debug) { \
+        cudaEventRecord(x16r_kernel_stop[thr_id]); \
+        cudaEventSynchronize(x16r_kernel_stop[thr_id]); \
+        cudaEventElapsedTime(&milliseconds, x16r_kernel_start[thr_id], x16r_kernel_stop[thr_id]); \
+        cudaEventDestroy(x16r_kernel_start[thr_id]); \
+        cudaEventDestroy(x16r_kernel_stop[thr_id]); \
+        avgDuration64[kid][thr_id] += (milliseconds - avgDuration64[kid][thr_id]) / (float)(totalRuns64[kid][thr_id] + 1); \
+        totalRuns64[kid][thr_id]++; \
+    } \
+}
+
+#define PRINT_METRICS { \
+    if (opt_debug) { \
+        for (int i = 0; i < HASH_FUNC_COUNT; i++) { \
+            int reali = i; \
+            if (i>6) reali++; \
+            gpulog(LOG_BLUE, thr_id, "%02d-64 AvgDuration after %d runs : %f ms", \
+                reali, totalRuns64[i][thr_id], avgDuration64[i][thr_id]); \
+        } \
+    } \
+}
+
+#endif // _PROFILE_METRICS_X17
+
+
+
 extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
 {
 	uint32_t *pdata = work->data;
@@ -159,7 +208,7 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 	const uint32_t first_nonce = pdata[19];
 
 	uint32_t throughput =  cuda_default_throughput(thr_id, 1U << 19); // 19=256*256*8;
-	//if (init[thr_id]) throughput = min(throughput, max_nonce - first_nonce);
+	if (init[thr_id]) throughput = min(throughput, max_nonce - first_nonce);
 
 	if (opt_benchmark)
 		((uint32_t*)ptarget)[7] = 0x00ff;
@@ -183,8 +232,9 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 		x11_luffaCubehash512_cpu_init(thr_id, throughput);
 		x11_shavite512_cpu_init(thr_id, throughput);
 		x11_simd512_cpu_init(thr_id, throughput);
-		x11_echo512_cpu_init(thr_id, throughput);
-		x13_hamsi512_cpu_init(thr_id, throughput);
+        //x11_echo512_cpu_init(thr_id, throughput);
+        echo512_cpu_init(thr_id);
+        x13_hamsi512_cpu_init(thr_id, throughput);
 		x13_fugue512_cpu_init(thr_id, throughput);
 		x14_shabal512_cpu_init(thr_id, throughput);
 		x15_whirlpool_cpu_init(thr_id, throughput, 0);
@@ -207,26 +257,112 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 
 	int warn = 0;
 
+    #ifdef _PROFILE_METRICS_X17
+    float milliseconds;
+    #endif // _PROFILE_METRICS_X17
+
 	do {
 		int order = 0;
 
 		// Hash with CUDA
+        #ifdef _PROFILE_METRICS_X17
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(0)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		quark_bmw512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(1)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		quark_groestl512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(2)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		quark_skein512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(3)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		quark_jh512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(4)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		quark_keccak512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(5)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x11_luffaCubehash512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(6)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x11_shavite512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(7)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x11_simd512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
-		x11_echo512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
-		x13_hamsi512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(8)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
+        //x11_echo512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        echo512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(9)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
+        x13_hamsi512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(10)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x13_fugue512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(11)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x14_shabal512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(12)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x15_whirlpool_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(13)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(14)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_X17
 		x17_haval256_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id], 256); order++;
+        #ifdef _PROFILE_METRICS_X17
+        STOP_METRICS(15)
+        #endif // _PROFILE_METRICS_X17
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
 
@@ -277,9 +413,19 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 
 	} while (pdata[19] < max_nonce && !work_restart[thr_id].restart);
 
+    #ifdef _PROFILE_METRICS_X17
+    PRINT_METRICS
+    #endif // _PROFILE_METRICS_X17
+
 	*hashes_done = pdata[19] - first_nonce;
 	return 0;
 }
+
+#ifdef _PROFILE_METRICS_X17
+#undef START_METRICS
+#undef STOP_METRICS
+#undef PRINT_METRICS
+#endif // _PROFILE_METRICS_X17
 
 // cleanup
 extern "C" void free_x17(int thr_id)
