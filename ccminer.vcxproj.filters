@@ -599,10 +599,24 @@
     <ClInclude Include="equi\equihash.h">
       <Filter>Source Files\equi</Filter>
     </ClInclude>
-    <ClInclude Include="x16r\cuda_x16r.h">
+    <ClInclude Include="cuda_uint2_utils.h" />
+    <ClInclude Include="Algo512\cuda_echo512_inlines.cuh" />
+    <ClInclude Include="aes\cuda_aes.cuh" />
+    <ClInclude Include="phi\cuda_phi.h" />
+    <ClInclude Include="x16x\cuda_x16x.h">
       <Filter>Header Files\CUDA</Filter>
     </ClInclude>
-    <ClInclude Include="Algo512\cuda_echo512_shortMsg.h" />
+    <ClInclude Include="Algo512\cuda_b_skein512.h" />
+    <ClInclude Include="Algo512\cuda_b_blake512.h" />
+    <ClInclude Include="Algo512\cuda_b_echo512.h" />
+    <ClInclude Include="Algo512\cuda_b_fugue512.h" />
+    <ClInclude Include="Algo512\cuda_b_luffa512.h" />
+    <ClInclude Include="Algo512\cuda_b_shabal512.h" />
+    <ClInclude Include="Algo512\cuda_b_shavite512.h" />
+    <ClInclude Include="Algo512\cuda_b_keccak512.h" />
+    <ClInclude Include="Algo512\cuda_b_sha512.h" />
+    <ClInclude Include="cuda_vectors.h" />
+    <ClInclude Include="Algo512\cuda_b_bmw512.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda.cpp">
@@ -764,9 +778,6 @@
     <CudaCompile Include="x17\cuda_x17_haval256.cu">
       <Filter>Source Files\CUDA\x17</Filter>
     </CudaCompile>
-    <CudaCompile Include="x17\cuda_x17_sha512.cu">
-      <Filter>Source Files\CUDA\x17</Filter>
-    </CudaCompile>
     <CudaCompile Include="x17\hmq17.cu">
       <Filter>Source Files\CUDA\x17</Filter>
     </CudaCompile>
@@ -797,9 +808,6 @@
     <ClInclude Include="tribus\cuda_echo512_aes.cuh">
       <Filter>Source Files\CUDA\tribus</Filter>
     </ClInclude>
-    <CudaCompile Include="x11\phi.cu">
-      <Filter>Source Files\CUDA\x11</Filter>
-    </CudaCompile>
     <CudaCompile Include="x11\sib.cu">
       <Filter>Source Files\CUDA\x11</Filter>
     </CudaCompile>
@@ -977,19 +985,23 @@
     <CudaCompile Include="x15\cuda_x15_whirlpool_sm3.cu">
       <Filter>Source Files\CUDA\x15</Filter>
     </CudaCompile>
-    <CudaCompile Include="x16r\cuda_x16_fugue512.cu">
+    <CudaCompile Include="phi\phi.cu" />
+    <CudaCompile Include="x16x\cuda_x16_simd512_80.cu">
       <Filter>Source Files\CUDA\x16r</Filter>
     </CudaCompile>
-    <CudaCompile Include="x16r\cuda_x16_shabal512.cu">
+    <CudaCompile Include="x16x\x16x.cu">
       <Filter>Source Files\CUDA\x16r</Filter>
     </CudaCompile>
-    <CudaCompile Include="x16r\cuda_x16_simd512_80.cu">
-      <Filter>Source Files\CUDA\x16r</Filter>
-    </CudaCompile>
-    <CudaCompile Include="x16r\x16r.cu">
-      <Filter>Source Files\CUDA\x16r</Filter>
-    </CudaCompile>
-    <CudaCompile Include="Algo512\cuda_echo512_shortMsg.cu" />
+    <CudaCompile Include="Algo512\cuda_b_skein512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_blake512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_echo512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_fugue512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_luffa512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_shabal512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_shavite512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_keccak512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_sha512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_bmw512.cu" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ccminer.ico">

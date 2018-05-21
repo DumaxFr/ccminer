@@ -2,6 +2,10 @@
 
 #include "cuda_helper.h"
 
+#ifdef WITH_HEAVY_ALGO
+
+
+
 // globaler Speicher für unsere Ergebnisse
 static uint32_t *d_hashoutput[MAX_GPUS];
 extern uint32_t *d_hash2output[MAX_GPUS];
@@ -149,3 +153,5 @@ void combine_cpu_hash(int thr_id, uint32_t threads, uint32_t startNounce, uint32
 	// da die Hash Auswertung noch auf der CPU erfolgt, müssen die Ergebnisse auf jeden Fall zum Host kopiert werden
 	CUDA_SAFE_CALL(cudaMemcpy(hash, d_hashoutput[thr_id], 8 * sizeof(uint32_t) * threads, cudaMemcpyDeviceToHost));
 }
+
+#endif // WITH_HEAVY_ALGO

@@ -10,8 +10,6 @@ Global
 		Debug|x64 = Debug|x64
 		Profile|Win32 = Profile|Win32
 		Profile|x64 = Profile|x64
-		Reference|Win32 = Reference|Win32
-		Reference|x64 = Reference|x64
 		Release|Win32 = Release|Win32
 		Release|x64 = Release|x64
 	EndGlobalSection
@@ -23,10 +21,6 @@ Global
 		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Profile|Win32.Build.0 = Profile|Win32
 		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Profile|x64.ActiveCfg = Profile|x64
 		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Profile|x64.Build.0 = Profile|x64
-		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Reference|Win32.ActiveCfg = Reference|Win32
-		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Reference|Win32.Build.0 = Reference|Win32
-		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Reference|x64.ActiveCfg = Reference|x64
-		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Reference|x64.Build.0 = Reference|x64
 		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Release|Win32.ActiveCfg = Release|Win32
 		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Release|Win32.Build.0 = Release|Win32
 		{36DC07F9-A4A6-4877-A146-1B960083CF6F}.Release|x64.ActiveCfg = Release|x64

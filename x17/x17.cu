@@ -29,7 +29,9 @@ extern "C" {
 #include "miner.h"
 #include "cuda_helper.h"
 #include "x11/cuda_x11.h"
-#include "Algo512\cuda_echo512_shortMsg.h"
+#include "Algo512/cuda_b_blake512.h"
+#include "Algo512/cuda_b_echo512.h"
+#include "Algo512/cuda_b_sha512.h"
 
 static uint32_t *d_hash[MAX_GPUS];
 
@@ -47,8 +49,8 @@ extern void x15_whirlpool_cpu_init(int thr_id, uint32_t threads, int flag);
 extern void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
 extern void x15_whirlpool_cpu_free(int thr_id);
 
-extern void x17_sha512_cpu_init(int thr_id, uint32_t threads);
-extern void x17_sha512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash);
+//extern void x17_sha512_cpu_init(int thr_id, uint32_t threads);
+//extern void x17_sha512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash);
 
 extern void x17_haval256_cpu_init(int thr_id, uint32_t threads);
 extern void x17_haval256_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const int outlen);
@@ -162,25 +164,25 @@ static bool init[MAX_GPUS] = { 0 };
 static float avgDuration64[HASH_FUNC_COUNT][MAX_GPUS] = { 0.0f };
 static long totalRuns64[HASH_FUNC_COUNT][MAX_GPUS] = { 0l };
 
-static cudaEvent_t x16r_kernel_start[MAX_GPUS];
-static cudaEvent_t x16r_kernel_stop[MAX_GPUS];
+static cudaEvent_t x17_kernel_start[MAX_GPUS];
+static cudaEvent_t x17_kernel_stop[MAX_GPUS];
 
 #define START_METRICS { \
     if (opt_debug) { \
         milliseconds = 0.0; \
-        cudaEventCreate(&x16r_kernel_start[thr_id]); \
-        cudaEventCreate(&x16r_kernel_stop[thr_id]); \
-        cudaEventRecord(x16r_kernel_start[thr_id]); \
+        cudaEventCreate(&x17_kernel_start[thr_id]); \
+        cudaEventCreate(&x17_kernel_stop[thr_id]); \
+        cudaEventRecord(x17_kernel_start[thr_id]); \
     } \
 }
 
 #define STOP_METRICS(kid) { \
     if (opt_debug) { \
-        cudaEventRecord(x16r_kernel_stop[thr_id]); \
-        cudaEventSynchronize(x16r_kernel_stop[thr_id]); \
-        cudaEventElapsedTime(&milliseconds, x16r_kernel_start[thr_id], x16r_kernel_stop[thr_id]); \
-        cudaEventDestroy(x16r_kernel_start[thr_id]); \
-        cudaEventDestroy(x16r_kernel_stop[thr_id]); \
+        cudaEventRecord(x17_kernel_stop[thr_id]); \
+        cudaEventSynchronize(x17_kernel_stop[thr_id]); \
+        cudaEventElapsedTime(&milliseconds, x17_kernel_start[thr_id], x17_kernel_stop[thr_id]); \
+        cudaEventDestroy(x17_kernel_start[thr_id]); \
+        cudaEventDestroy(x17_kernel_stop[thr_id]); \
         avgDuration64[kid][thr_id] += (milliseconds - avgDuration64[kid][thr_id]) / (float)(totalRuns64[kid][thr_id] + 1); \
         totalRuns64[kid][thr_id]++; \
     } \
@@ -223,7 +225,7 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 		}
 		gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
 
-		quark_blake512_cpu_init(thr_id, throughput);
+		quark_blake512_cpu_init(thr_id, throughput); // remove it ?
 		quark_groestl512_cpu_init(thr_id, throughput);
 		quark_skein512_cpu_init(thr_id, throughput);
 		quark_bmw512_cpu_init(thr_id, throughput);
@@ -233,12 +235,13 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 		x11_shavite512_cpu_init(thr_id, throughput);
 		x11_simd512_cpu_init(thr_id, throughput);
         //x11_echo512_cpu_init(thr_id, throughput);
-        echo512_cpu_init(thr_id);
+        //echo512_cpu_init(thr_id);
         x13_hamsi512_cpu_init(thr_id, throughput);
 		x13_fugue512_cpu_init(thr_id, throughput);
 		x14_shabal512_cpu_init(thr_id, throughput);
 		x15_whirlpool_cpu_init(thr_id, throughput, 0);
-		x17_sha512_cpu_init(thr_id, throughput);
+		//x17_sha512_cpu_init(thr_id, throughput);
+		cuda_base_sha512_cpu_init();
 		x17_haval256_cpu_init(thr_id, throughput);
 
 		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], 16 * sizeof(uint32_t) * throughput), 0);
@@ -252,23 +255,30 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 	for (int k=0; k < 20; k++)
 		be32enc(&endiandata[k], pdata[k]);
 
-	quark_blake512_cpu_setBlock_80(thr_id, endiandata);
 	cuda_check_cpu_setTarget(ptarget);
 
 	int warn = 0;
 
     #ifdef _PROFILE_METRICS_X17
     float milliseconds;
+    boolean metrics_do_first_start = false;
+    START_METRICS
     #endif // _PROFILE_METRICS_X17
+
+    cuda_base_blake512_cpu_setBlock_80(endiandata);
 
 	do {
 		int order = 0;
 
 		// Hash with CUDA
         #ifdef _PROFILE_METRICS_X17
-        START_METRICS
+        if (metrics_do_first_start) {
+            START_METRICS
+        } else {
+            metrics_do_first_start = true;
+        }
         #endif // _PROFILE_METRICS_X17
-		quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
+		cuda_base_blake512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_X17
         STOP_METRICS(0)
         
@@ -323,7 +333,7 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
         START_METRICS
         #endif // _PROFILE_METRICS_X17
         //x11_echo512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
-        echo512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
+        cuda_base_echo512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_X17
         STOP_METRICS(9)
         
@@ -353,7 +363,8 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
         
         START_METRICS
         #endif // _PROFILE_METRICS_X17
-		x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
+		//x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
+		cuda_base_sha512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_X17
         STOP_METRICS(14)
         

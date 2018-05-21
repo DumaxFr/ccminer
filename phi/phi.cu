@@ -19,18 +19,7 @@ extern "C" {
 
 #include "miner.h"
 #include "cuda_helper.h"
-#include "cuda_x11.h"
-
-extern void skein512_cpu_setBlock_80(void *pdata);
-extern void skein512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, int swap);
-extern void streebog_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
-extern void streebog_hash_64_maxwell(int thr_id, uint32_t threads, uint32_t *d_hash);
-
-extern void x13_fugue512_cpu_init(int thr_id, uint32_t threads);
-extern void x13_fugue512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
-extern void x13_fugue512_cpu_free(int thr_id);
-
-extern void tribus_echo512_final(int thr_id, uint32_t threads, uint32_t *d_hash, uint32_t *d_resNonce, const uint64_t target);
+#include "./cuda_phi.h"
 
 #include <stdio.h>
 #include <memory.h>
@@ -82,6 +71,51 @@ extern "C" void phihash(void *output, const void *input)
 static bool init[MAX_GPUS] = { 0 };
 static bool use_compat_kernels[MAX_GPUS] = { 0 };
 
+#ifdef _PROFILE_METRICS
+#define _PROFILE_METRICS_PHI
+#endif // _PROFILE_METRICS
+
+#ifdef _PROFILE_METRICS_PHI
+#define HASH_FUNC_COUNT 6
+static float avgDuration64[HASH_FUNC_COUNT][MAX_GPUS] = { 0.0f };
+static long totalRuns64[HASH_FUNC_COUNT][MAX_GPUS] = { 0l };
+
+static cudaEvent_t phi_kernel_start[MAX_GPUS];
+static cudaEvent_t phi_kernel_stop[MAX_GPUS];
+
+#define START_METRICS { \
+    if (opt_debug) { \
+        milliseconds = 0.0; \
+        cudaEventCreate(&phi_kernel_start[thr_id]); \
+        cudaEventCreate(&phi_kernel_stop[thr_id]); \
+        cudaEventRecord(phi_kernel_start[thr_id]); \
+    } \
+}
+
+#define STOP_METRICS(kid) { \
+    if (opt_debug) { \
+        cudaEventRecord(phi_kernel_stop[thr_id]); \
+        cudaEventSynchronize(phi_kernel_stop[thr_id]); \
+        cudaEventElapsedTime(&milliseconds, phi_kernel_start[thr_id], phi_kernel_stop[thr_id]); \
+        cudaEventDestroy(phi_kernel_start[thr_id]); \
+        cudaEventDestroy(phi_kernel_stop[thr_id]); \
+        avgDuration64[kid][thr_id] += (milliseconds - avgDuration64[kid][thr_id]) / (float)(totalRuns64[kid][thr_id] + 1); \
+        totalRuns64[kid][thr_id]++; \
+    } \
+}
+
+#define PRINT_METRICS { \
+    if (opt_debug) { \
+        for (int i = 0; i < HASH_FUNC_COUNT; i++) { \
+            gpulog(LOG_BLUE, thr_id, "%02d-64 AvgDuration after %d runs : %f ms", \
+                i, totalRuns64[i][thr_id], avgDuration64[i][thr_id]); \
+        } \
+    } \
+}
+
+#endif // _PROFILE_METRICS_PHI
+
+
 extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
 {
 	uint32_t *pdata = work->data;
@@ -117,8 +151,8 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 		quark_jh512_cpu_init(thr_id, throughput);
 		x11_cubehash512_cpu_init(thr_id, throughput);
 		x13_fugue512_cpu_init(thr_id, throughput);
-		if (use_compat_kernels[thr_id])
-			x11_echo512_cpu_init(thr_id, throughput);
+		//if (use_compat_kernels[thr_id])
+		//	x11_echo512_cpu_init(thr_id, throughput);
 
 		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t)64 * throughput), -1);
 		CUDA_SAFE_CALL(cudaMalloc(&d_resNonce[thr_id], 2 * sizeof(uint32_t)));
@@ -132,46 +166,96 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 	for (int k = 0; k < 20; k++)
 		be32enc(&endiandata[k], pdata[k]);
 
+	cuda_check_cpu_setTarget(ptarget);
+
+    #ifdef _PROFILE_METRICS_PHI
+    float milliseconds;
+    boolean metrics_do_first_start = false;
+    START_METRICS
+    #endif // _PROFILE_METRICS_PHI
+
 	skein512_cpu_setBlock_80((void*)endiandata);
-	if (use_compat_kernels[thr_id])
-		cuda_check_cpu_setTarget(ptarget);
-	else
-		cudaMemset(d_resNonce[thr_id], 0xFF, 2 * sizeof(uint32_t));
+	//if (use_compat_kernels[thr_id])
+	//else
+	//	cudaMemset(d_resNonce[thr_id], 0xFF, 2 * sizeof(uint32_t));
 
 	do {
 		int order = 0;
 
+		// Hash with CUDA
+        #ifdef _PROFILE_METRICS_PHI
+        if (metrics_do_first_start) {
+            START_METRICS
+        } else {
+            metrics_do_first_start = true;
+        }
+        #endif // _PROFILE_METRICS_PHI
 		skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 1); order++;
+        #ifdef _PROFILE_METRICS_PHI
+        STOP_METRICS(0)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_PHI
 		quark_jh512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_PHI
+        STOP_METRICS(1)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_PHI
 		x11_cubehash512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_PHI
+        STOP_METRICS(2)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_PHI
 		x13_fugue512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        #ifdef _PROFILE_METRICS_PHI
+        STOP_METRICS(3)
+        
+        START_METRICS
+        #endif // _PROFILE_METRICS_PHI
 		if (use_compat_kernels[thr_id]) {
 			streebog_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
+            #ifdef _PROFILE_METRICS_PHI
+            STOP_METRICS(4)
+        
+            START_METRICS
+            #endif // _PROFILE_METRICS_PHI
 			x11_echo512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
 			work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
+            #ifdef _PROFILE_METRICS_PHI
+            STOP_METRICS(5)
+            #endif // _PROFILE_METRICS_PHI
 		} else {
 			streebog_hash_64_maxwell(thr_id, throughput, d_hash[thr_id]);
-			tribus_echo512_final(thr_id, throughput, d_hash[thr_id], d_resNonce[thr_id], AS_U64(&ptarget[6]));
-			cudaMemcpy(&work->nonces[0], d_resNonce[thr_id], 2 * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+            #ifdef _PROFILE_METRICS_PHI
+            STOP_METRICS(4)
+        
+            START_METRICS
+            #endif // _PROFILE_METRICS_PHI
+            cuda_base_echo512_cpu_hash_64(throughput, d_hash[thr_id]);
+			work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
+            #ifdef _PROFILE_METRICS_PHI
+            STOP_METRICS(5)
+            #endif // _PROFILE_METRICS_PHI
 		}
 
-		if (work->nonces[0] != UINT32_MAX)
-		{
+        *hashes_done = pdata[19] - first_nonce + throughput;
+
+		if (work->nonces[0] != UINT32_MAX) {
 			const uint32_t Htarg = ptarget[7];
-			const uint32_t startNonce = pdata[19];
 			uint32_t _ALIGN(64) vhash[8];
-			if (!use_compat_kernels[thr_id]) work->nonces[0] += startNonce;
 			be32enc(&endiandata[19], work->nonces[0]);
 			phihash(vhash, endiandata);
 
 			if (vhash[7] <= Htarg && fulltest(vhash, ptarget)) {
 				work->valid_nonces = 1;
 				work_set_target_ratio(work, vhash);
-				*hashes_done = pdata[19] - first_nonce + throughput;
-				//work->nonces[1] = cuda_check_hash_suppl(thr_id, throughput, pdata[19], d_hash[thr_id], 1);
-				//if (work->nonces[1] != 0) {
-				if (work->nonces[1] != UINT32_MAX) {
-					work->nonces[1] += startNonce;
+				//*hashes_done = pdata[19] - first_nonce + throughput;
+				work->nonces[1] = cuda_check_hash_suppl(thr_id, throughput, pdata[19], d_hash[thr_id], 1);
+				if (work->nonces[1] != 0) {
+				//if (work->nonces[1] != UINT32_MAX) {
+				//	work->nonces[1] += startNonce;
 					be32enc(&endiandata[19], work->nonces[1]);
 					phihash(vhash, endiandata);
 					bn_set_target_ratio(work, vhash, 1);
@@ -201,9 +285,20 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 
 	} while (!work_restart[thr_id].restart);
 
+    #ifdef _PROFILE_METRICS_PHI
+    PRINT_METRICS
+    #endif // _PROFILE_METRICS_PHI
+
 	*hashes_done = pdata[19] - first_nonce;
 	return 0;
 }
+
+#ifdef _PROFILE_METRICS_PHI
+#undef START_METRICS
+#undef STOP_METRICS
+#undef PRINT_METRICS
+#endif // _PROFILE_METRICS_PHI
+
 
 // cleanup
 extern "C" void free_phi(int thr_id)

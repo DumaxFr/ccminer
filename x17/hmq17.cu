@@ -27,6 +27,7 @@ extern "C" {
 #include <cuda_helper.h>
 
 #include "x11/cuda_x11.h"
+#include "Algo512/cuda_b_sha512.h"
 
 static uint32_t *d_hash[MAX_GPUS];
 static uint32_t *d_hash_br2[MAX_GPUS];
@@ -52,8 +53,8 @@ extern void x15_whirlpool_cpu_init(int thr_id, uint32_t threads, int flag);
 extern void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
 extern void x15_whirlpool_cpu_free(int thr_id);
 
-extern void x17_sha512_cpu_init(int thr_id, uint32_t threads);
-extern void x17_sha512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash);
+//extern void x17_sha512_cpu_init(int thr_id, uint32_t threads);
+//extern void x17_sha512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash);
 
 extern void x17_haval256_cpu_init(int thr_id, uint32_t threads);
 extern void x17_haval256_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const int outlen);
@@ -361,7 +362,8 @@ extern "C" int scanhash_hmq17(int thr_id, struct work* work, uint32_t max_nonce,
 		x13_hamsi512_cpu_init(thr_id, throughput);
 		x13_fugue512_cpu_init(thr_id, throughput);
 		x14_shabal512_cpu_init(thr_id, throughput);
-		x17_sha512_cpu_init(thr_id, throughput);
+		//x17_sha512_cpu_init(thr_id, throughput);
+		cuda_base_sha512_cpu_init();
 
 		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);
 		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash_br2[thr_id], (size_t) 64 * throughput), 0);
@@ -444,11 +446,13 @@ extern "C" int scanhash_hmq17(int thr_id, struct work* work, uint32_t max_nonce,
 
 		hmq_filter_cpu(thr_id, throughput, d_hash[thr_id], d_hash_br2[thr_id]);
 		x13_fugue512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
-		x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash_br2[thr_id]); order++;
+		//x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash_br2[thr_id]); order++;
+		cuda_base_sha512_cpu_hash_64(throughput, d_hash_br2[thr_id]); order++;
 		hmq_merge_cpu(thr_id, throughput, d_hash[thr_id], d_hash_br2[thr_id]);
 
 		quark_groestl512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
-		x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
+		//x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
+		cuda_base_sha512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
 		TRACE("sha512 ");
 
 		hmq_filter_cpu(thr_id, throughput, d_hash[thr_id], d_hash_br2[thr_id]);

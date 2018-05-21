@@ -256,16 +256,22 @@ uint64_t xor8(uint64_t a, uint64_t b, uint64_t c, uint64_t d,uint64_t e,uint64_t
 
 // device asm for x17
 __device__ __forceinline__
-uint64_t xandx(uint64_t a, uint64_t b, uint64_t c)
+uint32_t xandx(uint32_t a, uint32_t b, uint32_t c)
 {
-#ifdef __CUDA_ARCH__
-	uint64_t result;
+#if __CUDA_ARCH__ >= 500
+	uint32_t result;
+    asm("{ lop3.b32 %0, %1, %2, %3, 0xca; }"
+        : "=r"(result)
+        : "r"(a), "r"(b), "r"(c));
+	return result;
+#elif __CUDA_ARCH__
+	uint32_t result;
 	asm("{ // xandx \n\t"
-		".reg .u64 n;\n\t"
-		"xor.b64 %0, %2, %3;\n\t"
-		"and.b64 n, %0, %1;\n\t"
-		"xor.b64 %0, n, %3;\n\t"
-	"}\n" : "=l"(result) : "l"(a), "l"(b), "l"(c));
+		".reg .u32 n;\n\t"
+		"xor.b32 %0, %2, %3;\n\t"
+		"and.b32 n, %0, %1;\n\t"
+		"xor.b32 %0, n, %3;\n\t"
+	"}\n" : "=r"(result) : "r"(a), "r"(b), "r"(c));
 	return result;
 #else
 	return ((b^c) & a) ^ c;
@@ -477,6 +483,42 @@ static __host__ __device__ __forceinline__ uint64_t devectorize(uint2 v) {
 #endif
 }
 
+
+__device__ __forceinline__
+uint32_t CU32_ROL16(const uint32_t a) {
+    #if __CUDA_ARCH__ >= 200
+    uint32_t ret;
+	asm("prmt.b32 %0, %1, 0, 0x1032;"
+		: "=r"(ret) : "r"(a));
+	return ret;
+    #else
+    return ((a << 16) | (a >> 16));
+    #endif // __CUDA_ARCH__ >= 200
+}
+__device__ __forceinline__ 
+uint32_t CU32_ROL8(const uint32_t a) {
+    #if __CUDA_ARCH__ >= 200
+    uint32_t ret;
+	asm("prmt.b32 %0, %1, 0, 0x2103;"
+		: "=r"(ret) : "r"(a));
+	return ret;
+    #else
+    return ((a << 8) | (a >> 24));
+    #endif // __CUDA_ARCH__ >= 200
+}
+__device__ __forceinline__ 
+uint32_t CU32_ROR8(const uint32_t a) {
+    #if __CUDA_ARCH__ >= 200
+    uint32_t ret;
+	asm("prmt.b32 %0, %1, 0, 0x0321;"
+		: "=r"(ret) : "r"(a));
+	return ret;
+    #else
+    return ((a << 24) | (a >> 8));
+    #endif // __CUDA_ARCH__ >= 200
+}
+
+
 /**
  * uint2 direct ops by c++ operator definitions
  */
@@ -519,10 +561,9 @@ static __device__ __forceinline__ uint2 operator* (uint2 a, uint2 b)
 
 // uint2 ROR/ROL methods
 __device__ __forceinline__
-uint2 ROR2(const uint2 a, const int offset)
-{
+uint2 ROR2(const uint2 a, const int offset) {
 	uint2 result;
-#if __CUDA_ARCH__ > 300
+#if __CUDA_ARCH__ >= 320
 	if (offset < 32) {
 		asm("shf.r.wrap.b32 %0, %1, %2, %3;" : "=r"(result.x) : "r"(a.x), "r"(a.y), "r"(offset));
 		asm("shf.r.wrap.b32 %0, %1, %2, %3;" : "=r"(result.y) : "r"(a.y), "r"(a.x), "r"(offset));
@@ -549,10 +590,9 @@ uint2 ROR2(const uint2 a, const int offset)
 }
 
 __device__ __forceinline__
-uint2 ROL2(const uint2 a, const int offset)
-{
+uint2 ROL2(const uint2 a, const int offset) {
 	uint2 result;
-#if __CUDA_ARCH__ > 300
+#if __CUDA_ARCH__ >= 320
 	if (offset >= 32) {
 		asm("shf.l.wrap.b32 %0, %1, %2, %3;" : "=r"(result.x) : "r"(a.x), "r"(a.y), "r"(offset));
 		asm("shf.l.wrap.b32 %0, %1, %2, %3;" : "=r"(result.y) : "r"(a.y), "r"(a.x), "r"(offset));
@@ -577,25 +617,22 @@ uint2 SWAPUINT2(uint2 value)
 }
 
 /* Byte aligned Rotations (lyra2) */
-#ifdef __CUDA_ARCH__
-__device__ __inline__ uint2 ROL8(const uint2 a)
-{
+#if __CUDA_ARCH__ >= 320
+__device__ __inline__ uint2 ROL8(const uint2 a) {
 	uint2 result;
 	result.x = __byte_perm(a.y, a.x, 0x6543);
 	result.y = __byte_perm(a.y, a.x, 0x2107);
 	return result;
 }
 
-__device__ __inline__ uint2 ROR16(const uint2 a)
-{
+__device__ __inline__ uint2 ROR16(const uint2 a) {
 	uint2 result;
 	result.x = __byte_perm(a.y, a.x, 0x1076);
 	result.y = __byte_perm(a.y, a.x, 0x5432);
 	return result;
 }
 
-__device__ __inline__ uint2 ROR24(const uint2 a)
-{
+__device__ __inline__ uint2 ROR24(const uint2 a) {
 	uint2 result;
 	result.x = __byte_perm(a.y, a.x, 0x2107);
 	result.y = __byte_perm(a.y, a.x, 0x6543);
@@ -612,7 +649,7 @@ __device__ __inline__ uint2 ROR24(const uint2 a)
 __device__ __forceinline__
 static uint2 SHL2(uint2 a, int offset)
 {
-#if __CUDA_ARCH__ > 300
+#if __CUDA_ARCH__ >= 320
 	uint2 result;
 	if (offset < 32)  {
 		asm("{ // SHL2 (l) \n\t"
@@ -641,7 +678,7 @@ static uint2 SHL2(uint2 a, int offset)
 __device__ __forceinline__
 static uint2 SHR2(uint2 a, int offset)
 {
-#if __CUDA_ARCH__ > 300
+#if __CUDA_ARCH__ >= 320
 	uint2 result;
 	if (offset<32) {
 		asm("{\n\t"

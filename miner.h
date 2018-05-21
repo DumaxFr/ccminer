@@ -569,6 +569,7 @@ extern "C" {
     int cuda_available_memory(int thr_id);
 
     uint32_t cuda_default_throughput(int thr_id, uint32_t defcount);
+    uint32_t cuda_default_throughput_lcm(int thr_id, uint32_t defcount, uint32_t lcm);
     #define device_intensity(t,f,d) cuda_default_throughput(t,d)
     double throughput2intensity(uint32_t throughput);
 
