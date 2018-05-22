@@ -487,10 +487,7 @@ static __host__ __device__ __forceinline__ uint64_t devectorize(uint2 v) {
 __device__ __forceinline__
 uint32_t CU32_ROL16(const uint32_t a) {
     #if __CUDA_ARCH__ >= 200
-    uint32_t ret;
-	asm("prmt.b32 %0, %1, 0, 0x1032;"
-		: "=r"(ret) : "r"(a));
-	return ret;
+    return __byte_perm(a, 0, 0x1032);
     #else
     return ((a << 16) | (a >> 16));
     #endif // __CUDA_ARCH__ >= 200
@@ -498,10 +495,7 @@ uint32_t CU32_ROL16(const uint32_t a) {
 __device__ __forceinline__ 
 uint32_t CU32_ROL8(const uint32_t a) {
     #if __CUDA_ARCH__ >= 200
-    uint32_t ret;
-	asm("prmt.b32 %0, %1, 0, 0x2103;"
-		: "=r"(ret) : "r"(a));
-	return ret;
+    return __byte_perm(a, 0, 0x2103);
     #else
     return ((a << 8) | (a >> 24));
     #endif // __CUDA_ARCH__ >= 200
@@ -509,10 +503,7 @@ uint32_t CU32_ROL8(const uint32_t a) {
 __device__ __forceinline__ 
 uint32_t CU32_ROR8(const uint32_t a) {
     #if __CUDA_ARCH__ >= 200
-    uint32_t ret;
-	asm("prmt.b32 %0, %1, 0, 0x0321;"
-		: "=r"(ret) : "r"(a));
-	return ret;
+    return __byte_perm(a, 0, 0x0321);
     #else
     return ((a << 24) | (a >> 8));
     #endif // __CUDA_ARCH__ >= 200
@@ -522,21 +513,28 @@ uint32_t CU32_ROR8(const uint32_t a) {
 /**
  * uint2 direct ops by c++ operator definitions
  */
-static __device__ __forceinline__ uint2 operator^ (uint2 a, uint2 b) { return make_uint2(a.x ^ b.x, a.y ^ b.y); }
-static __device__ __forceinline__ uint2 operator& (uint2 a, uint2 b) { return make_uint2(a.x & b.x, a.y & b.y); }
-static __device__ __forceinline__ uint2 operator| (uint2 a, uint2 b) { return make_uint2(a.x | b.x, a.y | b.y); }
-static __device__ __forceinline__ uint2 operator~ (uint2 a) { return make_uint2(~a.x, ~a.y); }
-static __device__ __forceinline__ void operator^= (uint2 &a, uint2 b) { a = a ^ b; }
+static __device__ __forceinline__ uint2 operator^ (const uint2 a, const uint32_t b) { return make_uint2(a.x ^ b, a.y); }
+static __device__ __forceinline__ uint2 operator^ (const uint2 a, const uint2 b) { return make_uint2(a.x ^ b.x, a.y ^ b.y); }
+static __device__ __forceinline__ uint2 operator& (const uint2 a, const uint2 b) { return make_uint2(a.x & b.x, a.y & b.y); }
+static __device__ __forceinline__ uint2 operator| (const uint2 a, const uint2 b) { return make_uint2(a.x | b.x, a.y | b.y); }
+static __device__ __forceinline__ uint2 operator~ (const uint2 a) { return make_uint2(~a.x, ~a.y); }
+static __device__ __forceinline__ void operator^= (uint2 &a, const uint2 b) { a = a ^ b; }
 
 static __device__ __forceinline__ uint2 operator+ (uint2 a, uint2 b) {
 	return vectorize(devectorize(a) + devectorize(b));
+}
+static __device__ __forceinline__ uint2 operator+ (uint2 a, const uint64_t b) {
+	return vectorize(devectorize(a) + b);
 }
 static __device__ __forceinline__ void operator+= (uint2 &a, uint2 b) { a = a + b; }
 
 static __device__ __forceinline__ uint2 operator- (uint2 a, uint2 b) {
 	return vectorize(devectorize(a) - devectorize(b));
 }
-static __device__ __forceinline__ void operator-= (uint2 &a, uint2 b) { a = a - b; }
+static __device__ __forceinline__ uint2 operator- (uint2 a, const uint64_t b) {
+	return vectorize(devectorize(a) - b);
+}
+static __device__ __forceinline__ void operator-= (uint2 &a, const uint2 b) { a = a - b; }
 
 /**
  * basic multiplication between 64bit no carry outside that range (ie mul.lo.b64(a*b))

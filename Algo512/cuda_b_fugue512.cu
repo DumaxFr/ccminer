@@ -413,6 +413,7 @@ void cuda_base_fugue512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
 	shared[3][threadIdx.x] = CU32_ROL8(tmp);
 
     __threadfence_block();
+    //__syncthreads();
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -435,9 +436,10 @@ void cuda_base_fugue512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
 		
 		S[ 0] = S[ 1] = S[ 2] = S[ 3] = S[ 4] = S[ 5] = S[ 6] = S[ 7] = S[ 8] = S[ 9] = S[10] = S[11] = S[12] = S[13] = S[14] = S[15] = S[16] = S[17] = S[18] = S[19] = 0;
 
-        #pragma unroll
-        for (int i = 0; i < 16; i+=4)
-            AS_UINT4(&S[i + 20]) = AS_UINT4(&c_S[i]);
+		AS_UINT4(&S[20]) = AS_UINT4(&c_S[ 0]);
+		AS_UINT4(&S[24]) = AS_UINT4(&c_S[ 4]);
+		AS_UINT4(&S[28]) = AS_UINT4(&c_S[ 8]);
+		AS_UINT4(&S[32]) = AS_UINT4(&c_S[12]);
 
 		FUGUE512_3(Hash[0x0], Hash[0x1], Hash[0x2]);
 		FUGUE512_3(Hash[0x3], Hash[0x4], Hash[0x5]);
@@ -455,7 +457,7 @@ void cuda_base_fugue512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
 			SMIX_LDG(shared, S[ 0], S[ 1], S[ 2], S[ 3]);
 		}
 
-		#pragma unroll
+		//#pragma unroll
 		for (uint32_t i = 0; i < 13; i ++) {
 			S[ 4] ^= S[ 0];	S[ 9] ^= S[ 0];	S[18] ^= S[ 0];	S[27] ^= S[ 0];
 			mROR9;
@@ -550,7 +552,7 @@ void cuda_base_fugue512_gpu_hash_64_final(const uint32_t threads, const uint32_t
 			SMIX_LDG(shared, S[ 0], S[ 1], S[ 2], S[ 3]);
 		}
 
-		#pragma unroll
+		//#pragma unroll
 		for (uint32_t i = 0; i < 12; i ++) {
 			S[ 4] ^= S[ 0];	S[ 9] ^= S[ 0];	S[18] ^= S[ 0];	S[27] ^= S[ 0];
 			mROR9;
@@ -576,10 +578,10 @@ void cuda_base_fugue512_gpu_hash_64_final(const uint32_t threads, const uint32_t
 		mROR9;
 		SMIX_LDG_FINAL(shared, S[ 0], S[ 1], S[ 2], S[ 3]);
 
-        S[6] = cuda_swab32(S[3]);
-        S[7] = cuda_swab32(S[4] ^ S[0]);
+        S[3] = cuda_swab32(S[3]);
+        S[4] = cuda_swab32(S[4] ^ S[0]);
 		
-		const uint64_t check = *(uint64_t*)&S[6];
+		const uint64_t check = *(uint64_t*)&S[3];
 		if(check <= target){
 			uint32_t tmp = atomicExch(&resNonce[0], startNonce + thread);
 			if (tmp != UINT32_MAX)

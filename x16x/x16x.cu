@@ -680,7 +680,13 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                     TRACE("blake  :");
                     break;
                 case BMW:
-                    cuda_base_bmw512_cpu_hash_64(throughput, d_hash[thr_id]);
+                    if (i == 15) {
+                        cudaHashFinalDone = true;
+                        cuda_base_bmw512_cpu_hash_64f(throughput, d_hash[thr_id], pdata[19], d_x16ResNonce[thr_id], *(uint64_t*)&ptarget[6]);
+                    } else {
+                        cuda_base_bmw512_cpu_hash_64(throughput, d_hash[thr_id]);
+                    }
+                    //cuda_base_bmw512_cpu_hash_64(throughput, d_hash[thr_id]);
                     //quark_bmw512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], i);
                     TRACE("bmw    :");
                     break;
