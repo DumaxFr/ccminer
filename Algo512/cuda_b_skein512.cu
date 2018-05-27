@@ -796,7 +796,7 @@ void cuda_base_skein512_cpu_hash_80(uint32_t threads, uint32_t startNounce, uint
 #pragma region Skein512_64
 
 __global__
-__launch_bounds__(SKEIN512_TPB64, 2)
+__launch_bounds__(SKEIN512_TPB64, 3)
 void cuda_base_skein512_gpu_hash_64(const uint32_t threads, uint32_t *g_hash) {
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
