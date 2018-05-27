@@ -2,19 +2,20 @@
 
 //#include "aes/cuda_aes.cuh"
 
-#include "Algo512/cuda_b_blake512.h"
-#include "Algo512/cuda_b_bmw512.h"
-#include "Algo512/cuda_b_echo512.h"
-#include "Algo512/cuda_b_fugue512.h"
-#include "Algo512/cuda_b_keccak512.h"
-#include "Algo512/cuda_b_luffa512.h"
-#include "Algo512/cuda_b_sha512.h"
-#include "Algo512/cuda_b_shabal512.h"
-#include "Algo512/cuda_b_shavite512.h"
-#include "Algo512/cuda_b_skein512.h"
+#include "Algo512\cuda_b_blake512.h"
+#include "Algo512\cuda_b_bmw512.h"
+#include "Algo512\cuda_b_echo512.h"
+#include "Algo512\cuda_b_fugue512.h"
+#include "Algo512\cuda_b_hamsi512.h"
+#include "Algo512\cuda_b_keccak512.h"
+#include "Algo512\cuda_b_luffa512.h"
+#include "Algo512\cuda_b_sha512.h"
+#include "Algo512\cuda_b_shabal512.h"
+#include "Algo512\cuda_b_shavite512.h"
+#include "Algo512\cuda_b_skein512.h"
 
-extern void x13_hamsi512_cpu_init(int thr_id, uint32_t threads);
-extern void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
+//extern void x13_hamsi512_cpu_init(int thr_id, uint32_t threads);
+//extern void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
 
 //extern void x13_fugue512_cpu_init(int thr_id, uint32_t threads);
 //extern void x13_fugue512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
@@ -63,8 +64,8 @@ void cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const ui
 void x16_simd512_setBlock_80(void *pdata);
 void x16_simd512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
 
-void x16_hamsi512_setBlock_80(void *pdata);
-void x16_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
+//void x16_hamsi512_setBlock_80(void *pdata);
+//void x16_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
 
 //void x16_fugue512_cpu_init(int thr_id, uint32_t threads);
 //void x16_fugue512_cpu_free(int thr_id);

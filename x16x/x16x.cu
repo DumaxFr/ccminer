@@ -451,7 +451,8 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
         x11_simd512_cpu_init(thr_id, throughput); // 64
         //x11_echo512_cpu_init(thr_id, throughput);
         cuda_base_echo512_cpu_init(thr_id);
-        x13_hamsi512_cpu_init(thr_id, throughput);
+        //x13_hamsi512_cpu_init(thr_id, throughput);
+        cuda_base_hamsi512_cpu_init();
         //x13_fugue512_cpu_init(thr_id, throughput);
         //x16_fugue512_cpu_init(thr_id, throughput);
         //x14_shabal512_cpu_init(thr_id, throughput);
@@ -518,7 +519,6 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
             break;
         case BMW:
             cuda_base_bmw512_cpu_setBlock_80(endiandata);
-            //quark_bmw512_cpu_setBlock_80(endiandata);
             break;
         case GROESTL:
             groestl512_setBlock_80(thr_id, endiandata);
@@ -549,7 +549,7 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
             cuda_base_echo512_setBlock_80((void*)endiandata);
             break;
         case HAMSI:
-            x16_hamsi512_setBlock_80((void*)endiandata);
+            cuda_base_hamsi512_setBlock_80((void*)endiandata);
             break;
         case FUGUE:
             cuda_base_fugue512_setBlock_80((void*)pdata);
@@ -595,7 +595,6 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                 break;
             case BMW:
                 cuda_base_bmw512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
-                //quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0);
                 TRACE("bmw80  :");
                 break;
             case GROESTL:
@@ -607,7 +606,6 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                 TRACE("jh51280:");
                 break;
             case KECCAK:
-                //cuda_base_keccak512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
                 keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
                 TRACE("kecck80:");
                 break;
@@ -636,7 +634,7 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                 TRACE("echo   :");
                 break;
             case HAMSI:
-                x16_hamsi512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+                cuda_base_hamsi512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
                 TRACE("hamsi  :");
                 break;
             case FUGUE:
@@ -686,8 +684,6 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                     } else {
                         cuda_base_bmw512_cpu_hash_64(throughput, d_hash[thr_id]);
                     }
-                    //cuda_base_bmw512_cpu_hash_64(throughput, d_hash[thr_id]);
-                    //quark_bmw512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], i);
                     TRACE("bmw    :");
                     break;
                 case GROESTL:
@@ -752,7 +748,12 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                     TRACE("echo   :");
                     break;
                 case HAMSI:
-                    x13_hamsi512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], i);
+                    if (i == 15) {
+                        cudaHashFinalDone = true;
+                        cuda_base_hamsi512_cpu_hash_64f(throughput, d_hash[thr_id], pdata[19], d_x16ResNonce[thr_id], *(uint64_t*)&ptarget[6]);
+                    } else {
+                        cuda_base_hamsi512_cpu_hash_64(throughput, d_hash[thr_id]);
+                    }
                     TRACE("hamsi  :");
                     break;
                 case FUGUE:

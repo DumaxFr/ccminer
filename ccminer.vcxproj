@@ -335,6 +335,7 @@
     <ClInclude Include="Algo512\cuda_b_blake512.h" />
     <ClInclude Include="Algo512\cuda_b_bmw512.h" />
     <ClInclude Include="Algo512\cuda_b_echo512.h" />
+    <ClInclude Include="Algo512\cuda_b_hamsi512.h" />
     <ClInclude Include="Algo512\cuda_b_keccak512.h" />
     <ClInclude Include="Algo512\cuda_b_sha512.h" />
     <ClInclude Include="Algo512\cuda_echo512_inlines.cuh" />
@@ -403,6 +404,7 @@
     <CudaCompile Include="Algo512\cuda_b_bmw512.cu" />
     <CudaCompile Include="Algo512\cuda_b_echo512.cu" />
     <CudaCompile Include="Algo512\cuda_b_fugue512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_hamsi512.cu" />
     <CudaCompile Include="Algo512\cuda_b_keccak512.cu" />
     <CudaCompile Include="Algo512\cuda_b_luffa512.cu" />
     <CudaCompile Include="Algo512\cuda_b_sha512.cu" />
