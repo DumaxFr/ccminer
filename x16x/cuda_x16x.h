@@ -4,6 +4,7 @@
 
 #include "Algo512\cuda_b_blake512.h"
 #include "Algo512\cuda_b_bmw512.h"
+#include "Algo512\cuda_b_cubehash512.h"
 #include "Algo512\cuda_b_echo512.h"
 #include "Algo512\cuda_b_fugue512.h"
 #include "Algo512\cuda_b_hamsi512.h"
