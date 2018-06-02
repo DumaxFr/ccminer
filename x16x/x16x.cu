@@ -127,7 +127,7 @@ static void getAlgoString(const uint32_t* prevblock, char *output, const char ba
 
 // X16x CPU Hash (Validation)
 extern "C" void x16x_hash(void *output, const void *input, const char variation) {
-    unsigned char _ALIGN(64) hash[128];
+    unsigned char _ALIGN(64) hash[64];
 
     sph_blake512_context ctx_blake;
     sph_bmw512_context ctx_bmw;
@@ -691,7 +691,13 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                     TRACE("groestl:");
                     break;
                 case JH:
-                    quark_jh512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], i);
+                    if (i == 15) {
+                        cudaHashFinalDone = true;
+                        cuda_base_jh512_cpu_hash_64f(throughput, d_hash[thr_id], pdata[19], d_x16ResNonce[thr_id], *(uint64_t*)&ptarget[6]);
+                    } else {
+                        cuda_base_jh512_cpu_hash_64(throughput, d_hash[thr_id]);
+                    }
+                    //quark_jh512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], i);
                     TRACE("jh512  :");
                     break;
                 case KECCAK:

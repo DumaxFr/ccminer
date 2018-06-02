@@ -8,6 +8,7 @@
 #include "Algo512\cuda_b_echo512.h"
 #include "Algo512\cuda_b_fugue512.h"
 #include "Algo512\cuda_b_hamsi512.h"
+#include "Algo512\cuda_b_jh512.h"
 #include "Algo512\cuda_b_keccak512.h"
 #include "Algo512\cuda_b_luffa512.h"
 #include "Algo512\cuda_b_sha512.h"

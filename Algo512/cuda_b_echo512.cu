@@ -3,8 +3,8 @@
 * 
 * 80 & 64 bytes messages implemented with precalculations
 *
-* DumaxFr@github 2018
 * Based on tpruvot 2018 - GPL code
+* DumaxFr@github 2018
 */
 
 #include <stdio.h>
