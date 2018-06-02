@@ -45,14 +45,14 @@ uint2 ROL16(const uint2 a) {
 #define ROL16(a) make_uint2(a.x, a.y) /* bad, just to define it */
 #endif
 
-static __forceinline__ __device__ uint4 operator+ (uint4 a, uint4 b) { return make_uint4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
-static __forceinline__ __device__ uint4 operator^ (uint4 a, uint4 b) { return make_uint4(a.x ^ b.x, a.y ^ b.y, a.z ^ b.z, a.w ^ b.w); }
-static __forceinline__ __device__ uint4 operator& (uint4 a, uint4 b) { return make_uint4(a.x & b.x, a.y & b.y, a.z & b.z, a.w & b.w); }
-static __forceinline__ __device__ uint4 operator>>(uint4 a, int b) { return make_uint4(a.x >> b, a.y >> b, a.z >> b, a.w >> b); }
-static __forceinline__ __device__ uint4 operator<<(uint4 a, int b) { return make_uint4(a.x << b, a.y << b, a.z << b, a.w << b); }
-static __forceinline__ __device__ uint4 operator* (uint4 a, int b) { return make_uint4(a.x * b, a.y * b, a.z * b, a.w * b); }
-static __forceinline__ __device__  void operator^=(uint4 &a, uint4 b) { a = a ^ b; }
-static __forceinline__ __device__  void operator+=(uint4 &a, uint4 b) { a = a + b; }
+static __forceinline__ __device__ __host__ uint4 operator+ (uint4 a, uint4 b) { return make_uint4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
+static __forceinline__ __device__ __host__ uint4 operator^ (uint4 a, uint4 b) { return make_uint4(a.x ^ b.x, a.y ^ b.y, a.z ^ b.z, a.w ^ b.w); }
+static __forceinline__ __device__ __host__ uint4 operator& (uint4 a, uint4 b) { return make_uint4(a.x & b.x, a.y & b.y, a.z & b.z, a.w & b.w); }
+static __forceinline__ __device__ __host__ uint4 operator>>(uint4 a, int b) { return make_uint4(a.x >> b, a.y >> b, a.z >> b, a.w >> b); }
+static __forceinline__ __device__ __host__ uint4 operator<<(uint4 a, int b) { return make_uint4(a.x << b, a.y << b, a.z << b, a.w << b); }
+static __forceinline__ __device__ __host__ uint4 operator* (uint4 a, int b) { return make_uint4(a.x * b, a.y * b, a.z * b, a.w * b); }
+static __forceinline__ __device__ __host__  void operator^=(uint4 &a, uint4 b) { a = a ^ b; }
+static __forceinline__ __device__ __host__  void operator+=(uint4 &a, uint4 b) { a = a + b; }
 
 
 
