@@ -178,10 +178,12 @@ uint32_t cuda_default_throughput_lcm(int thr_id, uint32_t defcount, uint32_t lcm
 	if (gpu_threads > 1 && throughput == defcount) throughput /= (gpu_threads-1);
 
     uint32_t throughputModLcm = throughput % lcm;
-    if (throughputModLcm > (lcm / 2)) {
-        throughput += lcm - throughputModLcm;
-    } else if (throughputModLcm != 0 && (throughputModLcm > (lcm / 2))) {
-        throughput -= throughputModLcm;
+    if (throughputModLcm != 0) {
+        if ((throughputModLcm < (lcm / 2)) && (throughput - throughputModLcm > 256)) {
+            throughput -= throughputModLcm;
+        } else {
+            throughput += lcm - throughputModLcm;
+        }
     }
 
 	if (api_thr_id != -1) api_set_throughput(thr_id, throughput);
