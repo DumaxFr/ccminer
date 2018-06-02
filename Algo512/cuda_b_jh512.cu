@@ -1,16 +1,16 @@
 /*
-	Based on Tanguy Pruvot's repo
-	Provos Alexis - 2016
+ * JH512 64 and 80 kernels
+ *
+ * JH80 by tpruvot - 2017 - under GPLv3
+ * Provos Alexis - 2016
+ * DumaxFr - 2018
 */
 
 #include "cuda_helper.h"
 #include "cuda_vector_uint2x4.h"
-//#include "miner.h"
-
-//#define TPB 512
-#define TPB 384
 
 #define JH512_TPB64 384
+#define JH512_TPB64F 384
 
 #pragma region constants
 
@@ -117,40 +117,38 @@ static void SWAP4x4(uint32_t *x) {
 	}
 }
 
-
-
-__device__ __forceinline__
-static void SWAP1(uint32_t &x) {
-	const uint32_t con = 0x55555555 , z = ((x & con) << 1);
-	x>>=1;
-	#if __CUDA_ARCH__ >= 500
-		asm ("lop3.b32 %0, %0, %1, %2, 0xEA;" : "+r"(x)	: "r"(con),"r"(z));	// 0xEA = (F0 & CC) | AA
-	#else
-		x = (x & con) | z;
-	#endif
-}
-
-__device__ __forceinline__
-static void SWAP2(uint32_t &x) {
-	const uint32_t con = 0x33333333, z = ((x & con) << 2);
-	x>>=2;
-	#if __CUDA_ARCH__ >= 500
-		asm ("lop3.b32 %0, %0, %1, %2, 0xEA;" : "+r"(x)	: "r"(con),"r"(z));	// 0xEA = (F0 & CC) | AA
-	#else
-		x = (x & con) | z;
-	#endif
-}
-
-__device__ __forceinline__
-static void SWAP4(uint32_t &x) {
-	const uint32_t con = 0x0F0F0F0F, z = ((x & con) << 4);
-	x>>=4;
-	#if __CUDA_ARCH__ >= 500
-		asm ("lop3.b32 %0, %0, %1, %2, 0xEA;" : "+r"(x)	: "r"(con),"r"(z));	// 0xEA = (F0 & CC) | AA
-	#else
-		x = (x & con) | z;
-	#endif
-}
+//__device__ __forceinline__
+//static void SWAP1(uint32_t &x) {
+//	const uint32_t con = 0x55555555 , z = ((x & con) << 1);
+//	x>>=1;
+//	#if __CUDA_ARCH__ >= 500
+//		asm ("lop3.b32 %0, %0, %1, %2, 0xEA;" : "+r"(x)	: "r"(con),"r"(z));	// 0xEA = (F0 & CC) | AA
+//	#else
+//		x = (x & con) | z;
+//	#endif
+//}
+//
+//__device__ __forceinline__
+//static void SWAP2(uint32_t &x) {
+//	const uint32_t con = 0x33333333, z = ((x & con) << 2);
+//	x>>=2;
+//	#if __CUDA_ARCH__ >= 500
+//		asm ("lop3.b32 %0, %0, %1, %2, 0xEA;" : "+r"(x)	: "r"(con),"r"(z));	// 0xEA = (F0 & CC) | AA
+//	#else
+//		x = (x & con) | z;
+//	#endif
+//}
+//
+//__device__ __forceinline__
+//static void SWAP4(uint32_t &x) {
+//	const uint32_t con = 0x0F0F0F0F, z = ((x & con) << 4);
+//	x>>=4;
+//	#if __CUDA_ARCH__ >= 500
+//		asm ("lop3.b32 %0, %0, %1, %2, 0xEA;" : "+r"(x)	: "r"(con),"r"(z));	// 0xEA = (F0 & CC) | AA
+//	#else
+//		x = (x & con) | z;
+//	#endif
+//}
 
 //The MDS transform
 __device__ __forceinline__
@@ -175,7 +173,7 @@ static void L(uint32_t &m0,uint32_t &m1,uint32_t &m2,uint32_t &m3,uint32_t &m4,u
 
 /* The Sbox */
 __device__ __forceinline__
-void Sbox(uint32_t &m0,uint32_t &m1,uint32_t &m2,uint32_t &m3,const uint32_t cc) {
+static void Sbox(uint32_t &m0,uint32_t &m1,uint32_t &m2,uint32_t &m3,const uint32_t cc) {
 	uint32_t temp;
 	
 	#if __CUDA_ARCH__ >= 500
@@ -202,10 +200,25 @@ void Sbox(uint32_t &m0,uint32_t &m1,uint32_t &m2,uint32_t &m3,const uint32_t cc)
 	m2^= temp;
 }
 
-#pragma endregion
+__device__ __forceinline__
+static void Sbox_and_MDS_layer(uint32_t x[8][4], const uint32_t rnd) {
+
+	// Sbox and MDS layer
+	uint2* cc = (uint2*) &c_E8[rnd];
+	#pragma unroll
+	for (int i = 0; i < 4; i++, ++cc) {
+		uint2 temp = *cc;
+		Sbox(x[0][i], x[2][i], x[4][i], x[6][i], temp.x);
+		Sbox(x[1][i], x[3][i], x[5][i], x[7][i], temp.y);
+		L(x[0][i], x[2][i], x[4][i], x[6][i], x[1][i], x[3][i], x[5][i], x[7][i]);
+	}
+}
 
 __device__ __forceinline__
-static void RoundFunction0(uint32_t x[8][4]) {
+static void RoundFunction0(uint32_t x[8][4], const uint32_t rnd) {
+
+	Sbox_and_MDS_layer(x, rnd);
+
 	#pragma unroll 4
 	for (int j = 1; j < 8; j += 2) {
 		SWAP1x4(x[j]);
@@ -214,7 +227,9 @@ static void RoundFunction0(uint32_t x[8][4]) {
 }
 
 __device__ __forceinline__
-static void RoundFunction1(uint32_t x[8][4]) {
+static void RoundFunction1(uint32_t x[8][4], const uint32_t rnd) {
+
+	Sbox_and_MDS_layer(x, rnd);
 
 	#pragma unroll 4
 	for (int j = 1; j < 8; j += 2) {
@@ -224,7 +239,9 @@ static void RoundFunction1(uint32_t x[8][4]) {
 }
 
 __device__ __forceinline__
-static void RoundFunction2(uint32_t x[8][4]) {
+static void RoundFunction2(uint32_t x[8][4], const uint32_t rnd) {
+
+	Sbox_and_MDS_layer(x, rnd);
 
 	#pragma unroll 4
 	for (int j = 1; j < 8; j += 2) {
@@ -234,7 +251,9 @@ static void RoundFunction2(uint32_t x[8][4]) {
 }
 
 __device__ __forceinline__
-static void RoundFunction3(uint32_t x[8][4]) {
+static void RoundFunction3(uint32_t x[8][4], const uint32_t rnd) {
+
+	Sbox_and_MDS_layer(x, rnd);
 
 	#pragma unroll 4
 	for (int j = 1; j < 8; j += 2) {
@@ -246,7 +265,9 @@ static void RoundFunction3(uint32_t x[8][4]) {
 }
 
 __device__ __forceinline__
-static void RoundFunction4(uint32_t x[8][4]) {
+static void RoundFunction4(uint32_t x[8][4], const uint32_t rnd) {
+
+	Sbox_and_MDS_layer(x, rnd);
 
 	#pragma unroll 4
 	for (int j = 1; j < 8; j += 2) {
@@ -257,7 +278,9 @@ static void RoundFunction4(uint32_t x[8][4]) {
 }
 
 __device__ __forceinline__
-static void RoundFunction5(uint32_t x[8][4]) {
+static void RoundFunction5(uint32_t x[8][4], const uint32_t rnd) {
+
+	Sbox_and_MDS_layer(x, rnd);
 
 	#pragma unroll 4
 	for (int j = 1; j < 8; j += 2) {
@@ -267,7 +290,9 @@ static void RoundFunction5(uint32_t x[8][4]) {
 }
 
 __device__ __forceinline__
-static void RoundFunction6(uint32_t x[8][4]) {
+static void RoundFunction6(uint32_t x[8][4], const uint32_t rnd) {
+
+	Sbox_and_MDS_layer(x, rnd);
 
 	#pragma unroll 4
 	for (int j = 1; j < 8; j += 2) {
@@ -275,53 +300,36 @@ static void RoundFunction6(uint32_t x[8][4]) {
 		xchg(x[j][1], x[j][3]);
 	}
 }
-__device__ __forceinline__
-static void Sbox_and_MDS_layer(uint32_t x[8][4], const uint32_t rnd)
-{
-	// Sbox and MDS layer
-	uint2* cc = (uint2*) &c_E8[rnd];
-	#pragma unroll
-	for (int i = 0; i < 4; i++, ++cc) {
-		uint2 temp = *cc;
-		Sbox(x[0][i], x[2][i], x[4][i], x[6][i], temp.x);
-		Sbox(x[1][i], x[3][i], x[5][i], x[7][i], temp.y);
-		L(x[0][i], x[2][i], x[4][i], x[6][i], x[1][i], x[3][i], x[5][i], x[7][i]);
-	}
-}
+
 /* The bijective function E8, in bitslice form */
 __device__
-static void E8(uint32_t x[8][4])
-{
+static void E8(uint32_t x[8][4]) {
+
 	/* perform 6 loops of 7 rounds */
 	for (int r = 0; r < 42; r += 7){
-		Sbox_and_MDS_layer(x,r);
-		RoundFunction0(x);
-		Sbox_and_MDS_layer(x,r+1);
-		RoundFunction1(x);
-		Sbox_and_MDS_layer(x,r+2);
-		RoundFunction2(x);
-		Sbox_and_MDS_layer(x,r+3);
-		RoundFunction3(x);
-		Sbox_and_MDS_layer(x,r+4);
-		RoundFunction4(x);
-		Sbox_and_MDS_layer(x,r+5);
-		RoundFunction5(x);
-		Sbox_and_MDS_layer(x,r+6);
-		RoundFunction6(x);
+		RoundFunction0(x, r);
+		RoundFunction1(x, r+1);
+		RoundFunction2(x, r+2);
+		RoundFunction3(x, r+3);
+		RoundFunction4(x, r+4);
+		RoundFunction5(x, r+5);
+		RoundFunction6(x, r+6);
 	}
 }
+
+#pragma endregion
 
 
 #pragma region Jh512_64
 
-
 __global__
-__launch_bounds__(TPB)
-void cuda_base_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash) {
+__launch_bounds__(JH512_TPB64)
+void cuda_base_jh512_gpu_hash_64(const uint32_t threads, uint32_t* g_hash) {
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
-	if (thread < threads){
+	if (thread < threads) {
+
 		uint32_t *Hash = &g_hash[thread<<4];
 		
 		uint32_t hash[16];
@@ -363,10 +371,76 @@ void cuda_base_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash) {
 __host__
 void cuda_base_jh512_cpu_hash_64(const uint32_t threads, uint32_t *d_hash) {
 
-	dim3 grid((threads + TPB-1)/TPB);
-	dim3 block(TPB);
+	dim3 grid((threads + JH512_TPB64-1)/JH512_TPB64);
+	dim3 block(JH512_TPB64);
 
 	cuda_base_jh512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
+}
+
+#pragma endregion
+
+#pragma region Jh512_64_final
+
+__global__
+__launch_bounds__(JH512_TPB64F)
+void cuda_base_jh512_gpu_hash_64f(const uint32_t threads, const uint32_t* __restrict__ g_hash, const uint32_t startNonce, uint32_t * resNonce, const uint64_t target) {
+
+	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
+
+	if (thread < threads) {
+
+		const uint32_t *Hash = &g_hash[thread<<4];
+		
+		uint32_t hash[16];
+		
+		uint32_t x[8][4] = { /* init */
+			{ 0x964bd16f, 0x17aa003e, 0x052e6a63, 0x43d5157a },{ 0x8d5e228a, 0x0bef970c, 0x591234e9, 0x61c3b3f2 },
+			{ 0xc1a01d89, 0x1e806f53, 0x6b05a92a, 0x806d2bea },{ 0xdbcc8e58, 0xa6ba7520, 0x763a0fa9, 0xf73bf8ba },
+			{ 0x05e66901, 0x694ae341, 0x8e8ab546, 0x5ae66f2e },{ 0xd0a74710, 0x243c84c1, 0xb1716e3b, 0x99c15a2d },
+			{ 0xecf657cf, 0x56f8b19d, 0x7c8806a7, 0x56b11657 },{ 0xdffcc2e3, 0xfb1785e6, 0x78465a54, 0x4bdd8ccc }
+		};
+
+		*(uint2x4*)&hash[0] = __ldg4((uint2x4*)&Hash[0]);
+		*(uint2x4*)&hash[8] = __ldg4((uint2x4*)&Hash[8]);
+		
+		#pragma unroll 16
+		for (int i = 0; i < 16; i++)
+			x[i/4][i & 3] ^= hash[i];
+
+		E8(x);
+
+		#pragma unroll 16
+		for (int i = 0; i < 16; i++)
+			x[(i+16)/4][i & 3] ^= hash[i];
+
+		x[0][0] ^= 0x80U;
+		x[3][3] ^= 0x00020000U;
+
+		E8(x);
+
+		x[4][0] ^= 0x80U;
+		x[7][3] ^= 0x00020000U;
+
+		//*(uint2x4*)&Hash[0] = *(uint2x4*)&x[4][0];
+		//*(uint2x4*)&Hash[8] = *(uint2x4*)&x[6][0];
+
+        uint64_t check = *(uint64_t*)&x[5][2];
+		if (check <= target) {
+			uint32_t tmp = atomicExch(&resNonce[0], startNonce + thread);
+            if (tmp != UINT32_MAX)
+				resNonce[1] = tmp;
+		}
+	}
+}
+
+
+__host__
+void cuda_base_jh512_cpu_hash_64f(const uint32_t threads, const uint32_t *d_hash, const uint32_t startNonce, uint32_t * d_resNonce, const uint64_t target) {
+
+	dim3 grid((threads + JH512_TPB64F-1)/JH512_TPB64F);
+	dim3 block(JH512_TPB64F);
+
+	cuda_base_jh512_gpu_hash_64f<<<grid, block>>>(threads, d_hash, startNonce, d_resNonce, target);
 }
 
 #pragma endregion
