@@ -149,7 +149,7 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 
 		quark_skein512_cpu_init(thr_id, throughput);
 		quark_jh512_cpu_init(thr_id, throughput);
-		x11_cubehash512_cpu_init(thr_id, throughput);
+		//x11_cubehash512_cpu_init(thr_id, throughput);
 		//x13_fugue512_cpu_init(thr_id, throughput);
 		//if (use_compat_kernels[thr_id])
 		//	x11_echo512_cpu_init(thr_id, throughput);
@@ -196,20 +196,19 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
         
         START_METRICS
         #endif // _PROFILE_METRICS_PHI
-		quark_jh512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+		//quark_jh512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+        cuda_base_jh512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(1)
         
         START_METRICS
         #endif // _PROFILE_METRICS_PHI
-		//x11_cubehash512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
         cuda_base_cubehash512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(2)
         
         START_METRICS
         #endif // _PROFILE_METRICS_PHI
-		//x13_fugue512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
         cuda_base_fugue512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(3)
@@ -236,7 +235,6 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
             START_METRICS
             #endif // _PROFILE_METRICS_PHI
             cuda_base_echo512_cpu_hash_64f(throughput, d_hash[thr_id], pdata[19], d_resNonce[thr_id], *(uint64_t*)&ptarget[6]);
-			//work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
             #ifdef _PROFILE_METRICS_PHI
             STOP_METRICS(5)
             #endif // _PROFILE_METRICS_PHI

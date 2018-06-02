@@ -337,6 +337,7 @@
     <ClInclude Include="Algo512\cuda_b_cubehash512.h" />
     <ClInclude Include="Algo512\cuda_b_echo512.h" />
     <ClInclude Include="Algo512\cuda_b_hamsi512.h" />
+    <ClInclude Include="Algo512\cuda_b_jh512.h" />
     <ClInclude Include="Algo512\cuda_b_keccak512.h" />
     <ClInclude Include="Algo512\cuda_b_sha512.h" />
     <ClInclude Include="Algo512\cuda_echo512_inlines.cuh" />
@@ -413,6 +414,7 @@
     <CudaCompile Include="Algo512\cuda_b_shavite512.cu" />
     <CudaCompile Include="Algo512\cuda_b_shabal512.cu" />
     <CudaCompile Include="Algo512\cuda_b_skein512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_jh512.cu" />
     <CudaCompile Include="crypto\cryptolight.cu" />
     <CudaCompile Include="crypto\cryptolight-core.cu">
       <MaxRegCount>64</MaxRegCount>

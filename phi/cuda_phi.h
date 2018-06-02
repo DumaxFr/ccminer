@@ -2,6 +2,7 @@
 #include "Algo512\cuda_b_cubehash512.h"
 #include "Algo512\cuda_b_echo512.h"
 #include "Algo512\cuda_b_fugue512.h"
+#include "Algo512\cuda_b_jh512.h"
 
 extern void skein512_cpu_setBlock_80(void *pdata);
 extern void skein512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, int swap);

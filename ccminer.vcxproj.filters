@@ -619,6 +619,7 @@
     <ClInclude Include="Algo512\cuda_b_bmw512.h" />
     <ClInclude Include="Algo512\cuda_b_hamsi512.h" />
     <ClInclude Include="Algo512\cuda_b_cubehash512.h" />
+    <ClInclude Include="Algo512\cuda_b_jh512.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda.cpp">
@@ -1006,6 +1007,7 @@
     <CudaCompile Include="Algo512\cuda_b_bmw512.cu" />
     <CudaCompile Include="Algo512\cuda_b_hamsi512.cu" />
     <CudaCompile Include="Algo512\cuda_b_cubehash512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_jh512.cu" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ccminer.ico">
