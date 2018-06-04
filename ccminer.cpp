@@ -268,7 +268,8 @@ Options:\n\
 			neoscrypt   FeatherCoin, Phoenix, UFO...\n\
 			nist5       NIST5 (TalkCoin)\n\
 			penta       Pentablake hash (5x Blake 512)\n\
-			phi         BHCoin\n\
+			phi         Lux, Folm ...\n\
+			phi2d       Dirty Lux Phi2\n\
 			polytimos   Politimos\n\
 			quark       Quark\n\
 			qubit       Qubit\n\
@@ -2427,6 +2428,9 @@ static void *miner_thread(void *userdata)
 			break;
 		case ALGO_PHI:
 			rc = scanhash_phi(thr_id, &work, max_nonce, &hashes_done);
+			break;
+		case ALGO_PHI2D:
+			rc = scanhash_phi2d(thr_id, &work, max_nonce, &hashes_done);
 			break;
 		case ALGO_POLYTIMOS:
 			rc = scanhash_polytimos(thr_id, &work, max_nonce, &hashes_done);

@@ -131,9 +131,8 @@
       <PtxAsOptionV>true</PtxAsOptionV>
       <Keep>true</Keep>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
-      <Include>$(NVTOOLSEXT_PATH)\include;..\..\..\Common\C99</Include>
+      <Include>$(NVTOOLSEXT_PATH)\include</Include>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <NvccCompilation>ptx</NvccCompilation>
     </CudaCompile>
     <CudaLink>
       <PerformDeviceLink>false</PerformDeviceLink>
@@ -396,6 +395,8 @@
     <ClCompile Include="neoscrypt\neoscrypt-cpu.c" />
     <ClInclude Include="neoscrypt\cuda_vectors.h" />
     <ClInclude Include="phi\cuda_phi.h" />
+    <ClInclude Include="phi\cuda_phi2d.h" />
+    <ClInclude Include="phi\cuda_phi2_skein512.h" />
     <ClInclude Include="x11\cuda_x11_simd512_sm2.cuh" />
     <ClInclude Include="x16x\cuda_x16x.h" />
     <CudaCompile Include="Algo256\bmw.cu" />
@@ -549,6 +550,9 @@
     <CudaCompile Include="cuda.cpp" />
     <CudaCompile Include="cuda_groestlcoin.cu" />
     <CudaCompile Include="cuda_myriadgroestl.cu" />
+    <CudaCompile Include="phi\cuda_phi2_lyra2.cu" />
+    <CudaCompile Include="phi\cuda_phi2_skein512.cu" />
+    <CudaCompile Include="phi\phi2d.cu" />
     <CudaCompile Include="scrypt\blake.cu" />
     <CudaCompile Include="scrypt\keccak.cu" />
     <CudaCompile Include="scrypt\sha256.cu" />

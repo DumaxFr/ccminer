@@ -81,6 +81,7 @@ void algo_free_all(int thr_id)
 	free_nist5(thr_id);
 	free_pentablake(thr_id);
 	free_phi(thr_id);
+	free_phi2d(thr_id);
 	free_polytimos(thr_id);
 	free_quark(thr_id);
 	free_qubit(thr_id);

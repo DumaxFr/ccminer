@@ -292,6 +292,7 @@ extern "C" {
     extern int scanhash_nist5(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_pentablake(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
+    extern int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_polytimos(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_quark(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_qubit(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
@@ -357,6 +358,7 @@ extern "C" {
     extern void free_nist5(int thr_id);
     extern void free_pentablake(int thr_id);
     extern void free_phi(int thr_id);
+    extern void free_phi2d(int thr_id);
     extern void free_polytimos(int thr_id);
     extern void free_quark(int thr_id);
     extern void free_qubit(int thr_id);
@@ -903,6 +905,7 @@ extern "C" {
     void nist5hash(void *state, const void *input);
     void pentablakehash(void *output, const void *input);
     void phihash(void *output, const void *input);
+    void phi2hash(void *output, const void *input);
     void polytimos_hash(void *output, const void *input);
     void quarkhash(void *state, const void *input);
     void qubithash(void *state, const void *input);
