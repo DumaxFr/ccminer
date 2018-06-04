@@ -20,9 +20,11 @@
 
 #include "streebog_arrays.cuh"
 
+#define STREEBOG_TPB64 128
+
 //#define FULL_UNROLL
 __device__ __forceinline__
-static void GOST_FS(const uint2 shared[8][256],const uint2 *const __restrict__ state,uint2* return_state)
+static void GOST_FS(const uint2 shared[8][256],const uint2* const __restrict__ state, uint2* return_state)
 {
 	return_state[0] = __ldg(&T02[__byte_perm(state[7].x,0,0x44440)])
 			^ shared[1][__byte_perm(state[6].x,0,0x44440)]
@@ -178,7 +180,7 @@ static void GOST_E12(const uint2 shared[8][256],uint2 *const __restrict__ K, uin
 {
 	uint2 t[8];
 	for(int i=0; i<12; i++){
-		GOST_FS(shared,state, t);
+		GOST_FS(shared, state, t);
 
 		#pragma unroll 8
 		for(int j=0;j<8;j++)
@@ -188,7 +190,7 @@ static void GOST_E12(const uint2 shared[8][256],uint2 *const __restrict__ K, uin
 		for(int j=0;j<8;j++)
 			state[ j] = t[ j];
 
-		GOST_FS_LDG(shared,K, t);
+		GOST_FS_LDG(shared, K, t);
 
 		#pragma unroll 8
 		for(int j=0;j<8;j++)
@@ -200,34 +202,94 @@ static void GOST_E12(const uint2 shared[8][256],uint2 *const __restrict__ K, uin
 	}
 }
 
-#define TPB 256
-__global__
-#if __CUDA_ARCH__ > 500
-__launch_bounds__(TPB, 3)
+
+#if STREEBOG_TPB64 == 128
+// shared[0][] & shared[7][] are always __ldg'ed
+#define LUT_GPU_INIT(sharedMemory, idx) { \
+	/*sharedMemory[0][(idx<<1) + 0] = __ldg(&T02[(idx<<1) + 0]);*/ \
+	/*sharedMemory[0][(idx<<1) + 1] = __ldg(&T02[(idx<<1) + 1]);*/ \
+	sharedMemory[1][(idx<<1) + 0] = __ldg(&T12[(idx<<1) + 0]); \
+	sharedMemory[1][(idx<<1) + 1] = __ldg(&T12[(idx<<1) + 1]); \
+	sharedMemory[2][(idx<<1) + 0] = __ldg(&T22[(idx<<1) + 0]); \
+	sharedMemory[2][(idx<<1) + 1] = __ldg(&T22[(idx<<1) + 1]); \
+	sharedMemory[3][(idx<<1) + 0] = __ldg(&T32[(idx<<1) + 0]); \
+	sharedMemory[3][(idx<<1) + 1] = __ldg(&T32[(idx<<1) + 1]); \
+	sharedMemory[4][(idx<<1) + 0] = __ldg(&T42[(idx<<1) + 0]); \
+	sharedMemory[4][(idx<<1) + 1] = __ldg(&T42[(idx<<1) + 1]); \
+	sharedMemory[5][(idx<<1) + 0] = __ldg(&T52[(idx<<1) + 0]); \
+	sharedMemory[5][(idx<<1) + 1] = __ldg(&T52[(idx<<1) + 1]); \
+	sharedMemory[6][(idx<<1) + 0] = __ldg(&T62[(idx<<1) + 0]); \
+	sharedMemory[6][(idx<<1) + 1] = __ldg(&T62[(idx<<1) + 1]); \
+	/*sharedMemory[7][(idx<<1) + 0] = __ldg(&T72[(idx<<1) + 0]);*/ \
+	/*sharedMemory[7][(idx<<1) + 1] = __ldg(&T72[(idx<<1) + 1]);*/ \
+}
+#elif STREEBOG_TPB64 == 256
+#define LUT_GPU_INIT(sharedMemory, idx) { \
+	/*sharedMemory[0][idx] = __ldg(&T02[idx]);*/ \
+	sharedMemory[1][idx] = __ldg(&T12[idx]); \
+	sharedMemory[2][idx] = __ldg(&T22[idx]); \
+	sharedMemory[3][idx] = __ldg(&T32[idx]); \
+	sharedMemory[4][idx] = __ldg(&T42[idx]); \
+	sharedMemory[5][idx] = __ldg(&T52[idx]); \
+	sharedMemory[6][idx] = __ldg(&T62[idx]); \
+	/*sharedMemory[7][idx] = __ldg(&T72[idx]);*/ \
+}
+#elif STREEBOG_TPB64 < 256
+#define LUT_GPU_INIT(sharedMemory, idx) { \
+    if (idx < 128) { \
+	    /*sharedMemory[0][(idx<<1) + 0] = __ldg(&T02[(idx<<1) + 0]);*/ \
+	    /*sharedMemory[0][(idx<<1) + 1] = __ldg(&T02[(idx<<1) + 1]);*/ \
+	    sharedMemory[1][(idx<<1) + 0] = __ldg(&T12[(idx<<1) + 0]); \
+	    sharedMemory[1][(idx<<1) + 1] = __ldg(&T12[(idx<<1) + 1]); \
+	    sharedMemory[2][(idx<<1) + 0] = __ldg(&T22[(idx<<1) + 0]); \
+	    sharedMemory[2][(idx<<1) + 1] = __ldg(&T22[(idx<<1) + 1]); \
+	    sharedMemory[3][(idx<<1) + 0] = __ldg(&T32[(idx<<1) + 0]); \
+	    sharedMemory[3][(idx<<1) + 1] = __ldg(&T32[(idx<<1) + 1]); \
+	    sharedMemory[4][(idx<<1) + 0] = __ldg(&T42[(idx<<1) + 0]); \
+	    sharedMemory[4][(idx<<1) + 1] = __ldg(&T42[(idx<<1) + 1]); \
+	    sharedMemory[5][(idx<<1) + 0] = __ldg(&T52[(idx<<1) + 0]); \
+	    sharedMemory[5][(idx<<1) + 1] = __ldg(&T52[(idx<<1) + 1]); \
+	    sharedMemory[6][(idx<<1) + 0] = __ldg(&T62[(idx<<1) + 0]); \
+	    sharedMemory[6][(idx<<1) + 1] = __ldg(&T62[(idx<<1) + 1]); \
+	    /*sharedMemory[7][(idx<<1) + 0] = __ldg(&T72[(idx<<1) + 0]);*/ \
+	    /*sharedMemory[7][(idx<<1) + 1] = __ldg(&T72[(idx<<1) + 1]);*/ \
+    } \
+}
 #else
-__launch_bounds__(TPB, 3)
+#define LUT_GPU_INIT(sharedMemory, idx) { \
+    if (idx < 256) { \
+	    /*sharedMemory[0][idx] = __ldg(&T02[idx]);*/ \
+	    sharedMemory[1][idx] = __ldg(&T12[idx]); \
+	    sharedMemory[2][idx] = __ldg(&T22[idx]); \
+	    sharedMemory[3][idx] = __ldg(&T32[idx]); \
+	    sharedMemory[4][idx] = __ldg(&T42[idx]); \
+	    sharedMemory[5][idx] = __ldg(&T52[idx]); \
+	    sharedMemory[6][idx] = __ldg(&T62[idx]); \
+	    /*sharedMemory[7][idx] = __ldg(&T72[idx]);*/ \
+    } \
+}
 #endif
+
+
+
+__global__
+__launch_bounds__(STREEBOG_TPB64, 3)
 void streebog_gpu_hash_64_maxwell(uint64_t *g_hash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint2 buf[8], t[8], temp[8], K0[8], hash[8];
 
 	__shared__ uint2 shared[8][256];
-	shared[0][threadIdx.x] = __ldg(&T02[threadIdx.x]);
-	shared[1][threadIdx.x] = __ldg(&T12[threadIdx.x]);
-	shared[2][threadIdx.x] = __ldg(&T22[threadIdx.x]);
-	shared[3][threadIdx.x] = __ldg(&T32[threadIdx.x]);
-	shared[4][threadIdx.x] = __ldg(&T42[threadIdx.x]);
-	shared[5][threadIdx.x] = __ldg(&T52[threadIdx.x]);
-	shared[6][threadIdx.x] = __ldg(&T62[threadIdx.x]);
-	shared[7][threadIdx.x] = __ldg(&T72[threadIdx.x]);
+
+    LUT_GPU_INIT(shared, threadIdx.x)
+
+	__threadfence_block();
 
 	uint64_t* inout = &g_hash[thread<<3];
 
 	*(uint2x4*)&hash[0] = __ldg4((uint2x4*)&inout[0]);
 	*(uint2x4*)&hash[4] = __ldg4((uint2x4*)&inout[4]);
 
-	__threadfence_block();
 
 	K0[0] = vectorize(0x74a5d4ce2efc83b3);
 
@@ -303,7 +365,8 @@ void streebog_gpu_hash_64_maxwell(uint64_t *g_hash)
 __host__
 void streebog_hash_64_maxwell(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
-	dim3 grid((threads + TPB-1) / TPB);
-	dim3 block(TPB);
+	dim3 grid((threads + STREEBOG_TPB64-1) / STREEBOG_TPB64);
+	dim3 block(STREEBOG_TPB64);
+
 	streebog_gpu_hash_64_maxwell <<<grid, block>>> ((uint64_t*)d_hash);
 }

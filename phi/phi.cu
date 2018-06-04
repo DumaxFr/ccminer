@@ -128,7 +128,7 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 	if (device_sm[dev_id] >= 600) intensity = 20;
 
     // least common multiple of all TPB algos
-    uint32_t lcm = 7680; // should be calculated by a cuda_get_lcm function
+    uint32_t lcm = 3840; // should be calculated by a cuda_get_lcm function
     uint32_t throughput = cuda_default_throughput_lcm(thr_id, 1U << intensity, lcm);
     if (init[thr_id] && max_nonce - first_nonce < throughput) {
         throughput = max_nonce - first_nonce + lcm - ((max_nonce - first_nonce) % lcm);
@@ -154,7 +154,7 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t)64 * throughput), -1);
 		CUDA_SAFE_CALL(cudaMalloc(&d_resNonce[thr_id], 2 * sizeof(uint32_t)));
 
-		cuda_check_cpu_init(thr_id, throughput);
+		//cuda_check_cpu_init(thr_id, throughput);
 		init[thr_id] = true;
 	}
 
@@ -282,8 +282,8 @@ extern "C" void free_phi(int thr_id)
 
 	cudaThreadSynchronize();
 	cudaFree(d_hash[thr_id]);
-	//cudaFree(d_resNonce[thr_id]); // done in cuda_chech_cpu_free
-	cuda_check_cpu_free(thr_id);
+	cudaFree(d_resNonce[thr_id]);
+	//cuda_check_cpu_free(thr_id);
 	init[thr_id] = false;
 
 	cudaDeviceSynchronize();
