@@ -65,7 +65,8 @@ extern "C" void phihash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
-#define _DEBUG_PREFIX "phi"
+//#define _DEBUG
+#define _DEBUG_PREFIX "phi-"
 #include "cuda_debug.cuh"
 
 static bool init[MAX_GPUS] = { 0 };
@@ -175,7 +176,6 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 
 	do {
 
-        // Hash with CUDA
         #ifdef _PROFILE_METRICS_PHI
         if (metrics_do_first_start) {
             START_METRICS
@@ -214,6 +214,8 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
         START_METRICS
         #endif // _PROFILE_METRICS_PHI
         cuda_base_echo512_cpu_hash_64f(throughput, d_hash[thr_id], pdata[19], d_resNonce[thr_id], *(uint64_t*)&ptarget[6]);
+        //cuda_base_echo512_cpu_hash_64(throughput, d_hash[thr_id]); // for debug with --cputest
+        TRACE("final :")
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(5)
         #endif // _PROFILE_METRICS_PHI

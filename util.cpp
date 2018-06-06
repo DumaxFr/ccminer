@@ -798,9 +798,6 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 			rc = true;
 			break;
 		}
-		if (hash[1] == target[1]) {
-			applog(LOG_NOTICE, "We found a close match!");
-		}
 	}
 
 	if ((!rc && opt_debug) || opt_debug_diff) {
@@ -2122,9 +2119,10 @@ static uint32_t zrtest[20] = {
 	swab32(0x2a9e2300),
 };
 
-void do_gpu_tests(void)
-{
-#ifdef _DEBUG
+void do_gpu_tests(void) {
+
+    #ifdef _DEBUG
+    //#if 1
 	unsigned long done;
 	char s[128] = { '\0' };
 	struct work work;
@@ -2141,12 +2139,14 @@ void do_gpu_tests(void)
 
 	memset(work.data, 0, sizeof(work.data));
 	work.data[0] = 0;
-	scanhash_hmq17(0, &work, 1, &done);
+	//scanhash_x16x(0, &work, 1, &done, 'r');
+	scanhash_phi2d(0, &work, 1, &done);
+	//scanhash_phi(0, &work, 1, &done);
 
 	free(work_restart);
 	work_restart = NULL;
 	opt_tracegpu = false;
-#endif
+    #endif
 }
 
 void print_hash_tests(void)
@@ -2164,177 +2164,183 @@ void print_hash_tests(void)
 
 	printf(CL_WHT "CPU HASH ON EMPTY BUFFER RESULTS:" CL_N "\n");
 
-	bastionhash(&hash[0], &buf[0]);
-	printpfx("bastion", hash);
+	//bastionhash(&hash[0], &buf[0]);
+	//printpfx("bastion", hash);
 
-	blake256hash(&hash[0], &buf[0], 8);
-	printpfx("blakecoin", hash);
+	//blake256hash(&hash[0], &buf[0], 8);
+	//printpfx("blakecoin", hash);
 
-	blake256hash(&hash[0], &buf[0], 14);
-	printpfx("blake", hash);
+	//blake256hash(&hash[0], &buf[0], 14);
+	//printpfx("blake", hash);
 
-	blake2s_hash(&hash[0], &buf[0]);
-	printpfx("blake2s", hash);
+	//blake2s_hash(&hash[0], &buf[0]);
+	//printpfx("blake2s", hash);
 
-	bmw_hash(&hash[0], &buf[0]);
-	printpfx("bmw", hash);
+	//bmw_hash(&hash[0], &buf[0]);
+	//printpfx("bmw", hash);
 
-	c11hash(&hash[0], &buf[0]);
-	printpfx("c11", hash);
+	//c11hash(&hash[0], &buf[0]);
+	//printpfx("c11", hash);
 
-	cryptolight_hash(&hash[0], &buf[0], 76);
-	printpfx("cryptolight", hash);
+	//cryptolight_hash(&hash[0], &buf[0], 76);
+	//printpfx("cryptolight", hash);
 
-	cryptonight_hash(&hash[0], &buf[0], 76);
-	printpfx("cryptonight", hash);
+	//cryptonight_hash(&hash[0], &buf[0], 76);
+	//printpfx("cryptonight", hash);
 
-	memset(buf, 0, 180);
-	decred_hash(&hash[0], &buf[0]);
-	printpfx("decred", hash);
+	//memset(buf, 0, 180);
+	//decred_hash(&hash[0], &buf[0]);
+	//printpfx("decred", hash);
 
-	deephash(&hash[0], &buf[0]);
-	printpfx("deep", hash);
+	//deephash(&hash[0], &buf[0]);
+	//printpfx("deep", hash);
 
-	fresh_hash(&hash[0], &buf[0]);
-	printpfx("fresh", hash);
+	//fresh_hash(&hash[0], &buf[0]);
+	//printpfx("fresh", hash);
 
-	fugue256_hash(&hash[0], &buf[0], 32);
-	printpfx("fugue256", hash);
+	//fugue256_hash(&hash[0], &buf[0], 32);
+	//printpfx("fugue256", hash);
 
-	groestlhash(&hash[0], &buf[0]);
-	printpfx("groestl", hash);
+	//groestlhash(&hash[0], &buf[0]);
+	//printpfx("groestl", hash);
 
-	heavycoin_hash(&hash[0], &buf[0], 32);
-	printpfx("heavy", hash);
+	//heavycoin_hash(&hash[0], &buf[0], 32);
+	//printpfx("heavy", hash);
 
-	hmq17hash(&hash[0], &buf[0]);
-	printpfx("hmq1725", hash);
+	//hmq17hash(&hash[0], &buf[0]);
+	//printpfx("hmq1725", hash);
 
-	hsr_hash(&hash[0], &buf[0]);
-        printpfx("hsr", hash);
+	//hsr_hash(&hash[0], &buf[0]);
+    //printpfx("hsr", hash);
 
-	jha_hash(&hash[0], &buf[0]);
-	printpfx("jha", hash);
+	//jha_hash(&hash[0], &buf[0]);
+	//printpfx("jha", hash);
 
-	keccak256_hash(&hash[0], &buf[0]);
-	printpfx("keccak", hash);
+	//keccak256_hash(&hash[0], &buf[0]);
+	//printpfx("keccak", hash);
 
-	memset(buf, 0, 128);
-	lbry_hash(&hash[0], &buf[0]);
-	printpfx("lbry", hash);
+	//memset(buf, 0, 128);
+	//lbry_hash(&hash[0], &buf[0]);
+	//printpfx("lbry", hash);
 
-	luffa_hash(&hash[0], &buf[0]);
-	printpfx("luffa", hash);
+	//luffa_hash(&hash[0], &buf[0]);
+	//printpfx("luffa", hash);
 
-	lyra2re_hash(&hash[0], &buf[0]);
-	printpfx("lyra2", hash);
+	//lyra2re_hash(&hash[0], &buf[0]);
+	//printpfx("lyra2", hash);
 
-	lyra2v2_hash(&hash[0], &buf[0]);
-	printpfx("lyra2v2", hash);
+	//lyra2v2_hash(&hash[0], &buf[0]);
+	//printpfx("lyra2v2", hash);
 
-	lyra2Z_hash(&hash[0], &buf[0]);
-	printpfx("lyra2z", hash);
+	//lyra2Z_hash(&hash[0], &buf[0]);
+	//printpfx("lyra2z", hash);
 
-	myriadhash(&hash[0], &buf[0]);
-	printpfx("myriad", hash);
+	//myriadhash(&hash[0], &buf[0]);
+	//printpfx("myriad", hash);
 
-	neoscrypt(&hash[0], &buf[0], 80000620);
-	printpfx("neoscrypt", hash);
+	//neoscrypt(&hash[0], &buf[0], 80000620);
+	//printpfx("neoscrypt", hash);
 
-	nist5hash(&hash[0], &buf[0]);
-	printpfx("nist5", hash);
+	//nist5hash(&hash[0], &buf[0]);
+	//printpfx("nist5", hash);
 
-	pentablakehash(&hash[0], &buf[0]);
-	printpfx("pentablake", hash);
+	//pentablakehash(&hash[0], &buf[0]);
+	//printpfx("pentablake", hash);
 
 	phihash(&hash[0], &buf[0]);
 	printpfx("phi", hash);
 
-	polytimos_hash(&hash[0], &buf[0]);
-	printpfx("polytimos", hash);
+	phi2hash(&hash[0], &buf[0]);
+	printpfx("phi2", hash);
 
-	quarkhash(&hash[0], &buf[0]);
-	printpfx("quark", hash);
+	//polytimos_hash(&hash[0], &buf[0]);
+	//printpfx("polytimos", hash);
 
-	qubithash(&hash[0], &buf[0]);
-	printpfx("qubit", hash);
+	//quarkhash(&hash[0], &buf[0]);
+	//printpfx("quark", hash);
 
-	scrypthash(&hash[0], &buf[0]);
-	printpfx("scrypt", hash);
+	//qubithash(&hash[0], &buf[0]);
+	//printpfx("qubit", hash);
 
-	scryptjane_hash(&hash[0], &buf[0]);
-	printpfx("scrypt-jane", hash);
+	//scrypthash(&hash[0], &buf[0]);
+	//printpfx("scrypt", hash);
 
-	sha256d_hash(&hash[0], &buf[0]);
-	printpfx("sha256d", hash);
+	//scryptjane_hash(&hash[0], &buf[0]);
+	//printpfx("scrypt-jane", hash);
 
-	sha256t_hash(&hash[0], &buf[0]);
-	printpfx("sha256t", hash);
+	//sha256d_hash(&hash[0], &buf[0]);
+	//printpfx("sha256d", hash);
 
-	blake2b_hash(&hash[0], &buf[0]);
-	printpfx("sia", hash);
+	//sha256t_hash(&hash[0], &buf[0]);
+	//printpfx("sha256t", hash);
 
-	sibhash(&hash[0], &buf[0]);
-	printpfx("sib", hash);
+	//blake2b_hash(&hash[0], &buf[0]);
+	//printpfx("sia", hash);
 
-	skeincoinhash(&hash[0], &buf[0]);
-	printpfx("skein", hash);
+	//sibhash(&hash[0], &buf[0]);
+	//printpfx("sib", hash);
 
-	skein2hash(&hash[0], &buf[0]);
-	printpfx("skein2", hash);
+	//skeincoinhash(&hash[0], &buf[0]);
+	//printpfx("skein", hash);
 
-	skunk_hash(&hash[0], &buf[0]);
-	printpfx("skunk", hash);
+	//skein2hash(&hash[0], &buf[0]);
+	//printpfx("skein2", hash);
 
-	s3hash(&hash[0], &buf[0]);
-	printpfx("S3", hash);
+	//skunk_hash(&hash[0], &buf[0]);
+	//printpfx("skunk", hash);
 
-	timetravel_hash(&hash[0], &buf[0]);
-	printpfx("timetravel", hash);
+	//s3hash(&hash[0], &buf[0]);
+	//printpfx("S3", hash);
 
-	bitcore_hash(&hash[0], &buf[0]);
-	printpfx("bitcore", hash);
+	//timetravel_hash(&hash[0], &buf[0]);
+	//printpfx("timetravel", hash);
 
-	blake256hash(&hash[0], &buf[0], 8);
-	printpfx("vanilla", hash);
+	//bitcore_hash(&hash[0], &buf[0]);
+	//printpfx("bitcore", hash);
 
-	tribus_hash(&hash[0], &buf[0]);
-	printpfx("tribus", hash);
+	//blake256hash(&hash[0], &buf[0], 8);
+	//printpfx("vanilla", hash);
 
-	veltorhash(&hash[0], &buf[0]);
-	printpfx("veltor", hash);
+	//tribus_hash(&hash[0], &buf[0]);
+	//printpfx("tribus", hash);
 
-	wcoinhash(&hash[0], &buf[0]);
-	printpfx("whirlpool", hash);
+	//veltorhash(&hash[0], &buf[0]);
+	//printpfx("veltor", hash);
+
+	//wcoinhash(&hash[0], &buf[0]);
+	//printpfx("whirlpool", hash);
 
 	//whirlxHash(&hash[0], &buf[0]);
 	//printpfx("whirlpoolx", hash);
 
-	x11evo_hash(&hash[0], &buf[0]);
-	printpfx("x11evo", hash);
+	//x11evo_hash(&hash[0], &buf[0]);
+	//printpfx("x11evo", hash);
 
-	x11hash(&hash[0], &buf[0]);
-	printpfx("X11", hash);
+	//x11hash(&hash[0], &buf[0]);
+	//printpfx("X11", hash);
 
-	x13hash(&hash[0], &buf[0]);
-	printpfx("X13", hash);
+	//x13hash(&hash[0], &buf[0]);
+	//printpfx("X13", hash);
 
-	x14hash(&hash[0], &buf[0]);
-	printpfx("X14", hash);
+	//x14hash(&hash[0], &buf[0]);
+	//printpfx("X14", hash);
 
-	x15hash(&hash[0], &buf[0]);
-	printpfx("X15", hash);
+	//x15hash(&hash[0], &buf[0]);
+	//printpfx("X15", hash);
 
 	x16x_hash(&hash[0], &buf[0], 'r');
 	printpfx("X16r", hash);
 
+	x16x_hash(&hash[0], &buf[0], 's');
+	printpfx("X16s", hash);
+
 	x17hash(&hash[0], &buf[0]);
 	printpfx("X17", hash);
 
-	//memcpy(buf, zrtest, 80);
-	zr5hash(&hash[0], &buf[0]);
-	//zr5hash_pok(&hash[0], (uint32_t*) &buf[0]);
-	printpfx("ZR5", hash);
+	////memcpy(buf, zrtest, 80);
+	//zr5hash(&hash[0], &buf[0]);
+	////zr5hash_pok(&hash[0], (uint32_t*) &buf[0]);
+	//printpfx("ZR5", hash);
 
 	printf("\n");
 
