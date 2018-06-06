@@ -261,7 +261,7 @@
       <PtxAsOptionV>true</PtxAsOptionV>
       <Keep>true</Keep>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
-      <Include>$(NVTOOLSEXT_PATH)\include</Include>
+      <Include>$(NVTOOLSEXT_PATH)\include;..\..\..\Common\C99</Include>
       <Optimization>O3</Optimization>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <AdditionalOptions>--Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
@@ -550,6 +550,7 @@
     <CudaCompile Include="cuda.cpp" />
     <CudaCompile Include="cuda_groestlcoin.cu" />
     <CudaCompile Include="cuda_myriadgroestl.cu" />
+    <CudaCompile Include="phi\cuda_phi2_br_streebog_echo512.cu" />
     <CudaCompile Include="phi\cuda_phi2_lyra2.cu" />
     <CudaCompile Include="phi\cuda_phi2_skein512.cu" />
     <CudaCompile Include="phi\phi2d.cu" />

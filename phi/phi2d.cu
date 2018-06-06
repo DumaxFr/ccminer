@@ -76,12 +76,11 @@ extern "C" void phi2hash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
-#define _DEBUG
+//#define _DEBUG
 #define _DEBUG_PREFIX "phi2d-"
 #include "cuda_debug.cuh"
 
 static bool init[MAX_GPUS] = { 0 };
-//static bool use_compat_kernels[MAX_GPUS] = { 0 };
 
 #ifdef _PROFILE_METRICS
 #define _PROFILE_METRICS_PHI
@@ -219,10 +218,8 @@ extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce,
         
         START_METRICS
         #endif // _PROFILE_METRICS_PHI
-        // if (hash[0] & 1) streebog(); not yet implemented to test  
-        cuda_base_echo512_cpu_hash_64(throughput, d_hash[thr_id]);
-        cuda_base_echo512_cpu_hash_64(throughput, d_hash[thr_id]);
-        TRACE("2xEcho512-64   : ")
+        cuda_phi2_branhc_streeb_echo512_cpu_hash_64(throughput, d_hash[thr_id]);
+        TRACE("Brnch StreeEcho: ")
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(3)
         
@@ -230,7 +227,7 @@ extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce,
         #endif // _PROFILE_METRICS_PHI
         // Phi2 skein512 and hash[i] ^= hash[i+32]
         cuda_phi2_skein512_cpu_hash_64f(throughput, d_hash[thr_id], pdata[19], d_resNonce[thr_id], *(uint64_t*)&ptarget[6]);
-        //cuda_phi2_skein512_cpu_hash_64(throughput, d_hash[thr_id]);
+        //cuda_phi2_skein512_cpu_hash_64(throughput, d_hash[thr_id]); // for debug with --cputest
         TRACE("skein512-64    : ")
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(4)

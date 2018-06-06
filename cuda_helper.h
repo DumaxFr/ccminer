@@ -170,6 +170,9 @@ __device__ __host__ __forceinline__ void xchg(uint32_t &x, uint32_t &y) {
 // for other types...
 #define XCHG(x, y) { x ^= y; y = x ^ y; x ^= y; }
 
+#define SWAP(a,b) { uint32_t u = a; a = b; b = u; }
+
+
 /*********************************************************************/
 // Macros to catch CUDA errors in CUDA runtime calls
 

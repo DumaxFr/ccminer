@@ -124,7 +124,8 @@ static void Gfunc(uint2 &a, uint2 &b, uint2 &c, uint2 &d)
 	c += d; b ^= c; b = ROR2(b, 63);
 }
 
-__device__ __forceinline__ void round_lyra(uint2 s[4])
+__device__ __forceinline__
+void round_lyra(uint2 s[4])
 {
 	Gfunc(s[0], s[1], s[2], s[3]);
 	WarpShuffle3(s[1], s[2], s[3], threadIdx.x + 1, threadIdx.x + 2, threadIdx.x + 3, 4);
@@ -317,36 +318,48 @@ static void reduceDuplexRowt_8(const int rowInOut, uint2* state, const uint32_t 
 		state[j] ^= last[j];
 }
 
-__constant__ uint2x4 blake2b_IV[2] = {
-	0xf3bcc908lu, 0x6a09e667lu,
-	0x84caa73blu, 0xbb67ae85lu,
-	0xfe94f82blu, 0x3c6ef372lu,
-	0x5f1d36f1lu, 0xa54ff53alu,
-	0xade682d1lu, 0x510e527flu,
-	0x2b3e6c1flu, 0x9b05688clu,
-	0xfb41bd6blu, 0x1f83d9ablu,
-	0x137e2179lu, 0x5be0cd19lu
-};
+//__constant__ uint2x4 blake2b_IV[2] = {
+//	0xf3bcc908lu, 0x6a09e667lu,
+//	0x84caa73blu, 0xbb67ae85lu,
+//	0xfe94f82blu, 0x3c6ef372lu,
+//	0x5f1d36f1lu, 0xa54ff53alu,
+//	0xade682d1lu, 0x510e527flu,
+//	0x2b3e6c1flu, 0x9b05688clu,
+//	0xfb41bd6blu, 0x1f83d9ablu,
+//	0x137e2179lu, 0x5be0cd19lu
+//};
 
 __global__
 __launch_bounds__(64, 1)
-void cuda_phi2_lyra2_gpu_hash_32p1_1(const uint32_t threads, uint2 *g_hash) {
+void cuda_phi2_lyra2_gpu_hash_32p1_1(const uint32_t threads, const uint2* const __restrict__ g_hash) {
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads) {
 
+        const uint2x4 blake2b_IV[2] = {
+	        0xf3bcc908lu, 0x6a09e667lu,
+	        0x84caa73blu, 0xbb67ae85lu,
+	        0xfe94f82blu, 0x3c6ef372lu,
+	        0x5f1d36f1lu, 0xa54ff53alu,
+	        0xade682d1lu, 0x510e527flu,
+	        0x2b3e6c1flu, 0x9b05688clu,
+	        0xfb41bd6blu, 0x1f83d9ablu,
+	        0x137e2179lu, 0x5be0cd19lu
+        };
+
 		uint2x4 state[4];
 
-        uint2* inHash = &g_hash[thread << 3];
+        const uint2* inHash = &g_hash[thread << 3];
 		state[0].x = state[1].x = __ldg(&inHash[0]);
 		state[0].y = state[1].y = __ldg(&inHash[1]);
 		state[0].z = state[1].z = __ldg(&inHash[2]);
 		state[0].w = state[1].w = __ldg(&inHash[3]);
+        //state[0] = state[1] = __ldg4((uint2x4*)&inHash[0]);
 		state[2] = blake2b_IV[0];
 		state[3] = blake2b_IV[1];
 
 		for (int i = 0; i<24; i++)
-			round_lyra(state); //because 12 is not enough
+			round_lyra(state);
 
 		((uint2x4*)DMatrix)[threads * 0 + thread] = state[0];
 		((uint2x4*)DMatrix)[threads * 1 + thread] = state[1];
@@ -357,23 +370,35 @@ void cuda_phi2_lyra2_gpu_hash_32p1_1(const uint32_t threads, uint2 *g_hash) {
 
 __global__
 __launch_bounds__(64, 1)
-void cuda_phi2_lyra2_gpu_hash_32p2_1(const uint32_t threads, uint2 *g_hash) {
+void cuda_phi2_lyra2_gpu_hash_32p2_1(const uint32_t threads, const uint2* const __restrict__ g_hash) {
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads) {
 
+        const uint2x4 blake2b_IV[2] = {
+	        0xf3bcc908lu, 0x6a09e667lu,
+	        0x84caa73blu, 0xbb67ae85lu,
+	        0xfe94f82blu, 0x3c6ef372lu,
+	        0x5f1d36f1lu, 0xa54ff53alu,
+	        0xade682d1lu, 0x510e527flu,
+	        0x2b3e6c1flu, 0x9b05688clu,
+	        0xfb41bd6blu, 0x1f83d9ablu,
+	        0x137e2179lu, 0x5be0cd19lu
+        };
+
 		uint2x4 state[4];
 
-        uint2* inHash = &g_hash[(thread << 3) + 4];
+        const uint2* inHash = &g_hash[(thread << 3) + 4];
 		state[0].x = state[1].x = __ldg(&inHash[0]);
 		state[0].y = state[1].y = __ldg(&inHash[1]);
 		state[0].z = state[1].z = __ldg(&inHash[2]);
 		state[0].w = state[1].w = __ldg(&inHash[3]);
+        //state[0] = state[1] = __ldg4((uint2x4*)&inHash[0]);
 		state[2] = blake2b_IV[0];
 		state[3] = blake2b_IV[1];
 
 		for (int i = 0; i<24; i++)
-			round_lyra(state); //because 12 is not enough
+			round_lyra(state);
 
 		((uint2x4*)DMatrix)[threads * 0 + thread] = state[0];
 		((uint2x4*)DMatrix)[threads * 1 + thread] = state[1];
@@ -449,6 +474,7 @@ void cuda_phi2_lyra2_gpu_hash_32p1_3(const uint32_t threads, uint2 *g_hash) {
 		outHash[1] = state[0].y;
 		outHash[2] = state[0].z;
 		outHash[3] = state[0].w;
+        //*(uint2x4*)&outHash[0] = state[0]; // interleave better than vector store
 	}
 }
 
@@ -474,6 +500,7 @@ void cuda_phi2_lyra2_gpu_hash_32p2_3(const uint32_t threads, uint2 *g_hash) {
 		outHash[1] = state[0].y;
 		outHash[2] = state[0].z;
 		outHash[3] = state[0].w;
+        //*(uint2x4*)&outHash[0] = state[0];
 	}
 }
 
@@ -495,13 +522,11 @@ void cuda_phi2_lyra2_cpu_hash_32x2(const uint32_t threads, uint32_t *d_hash) {
 	dim3 block2(64);
 
 	cuda_phi2_lyra2_gpu_hash_32p1_1 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
-	//cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 24 * (8 - 0) * sizeof(uint2) * tpb >>> (threads);
-	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1 >>> (threads);
+	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 24 * (8 - 0) * sizeof(uint2) * tpb >>> (threads);
 	cuda_phi2_lyra2_gpu_hash_32p1_3 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
 
 	cuda_phi2_lyra2_gpu_hash_32p2_1 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
-	//cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 24 * (8 - 0) * sizeof(uint2) * tpb >>> (threads);
-	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1 >>> (threads);
+	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 24 * (8 - 0) * sizeof(uint2) * tpb >>> (threads);
 	cuda_phi2_lyra2_gpu_hash_32p2_3 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
 
 }

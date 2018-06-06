@@ -1013,6 +1013,7 @@
     <CudaCompile Include="phi\phi2d.cu" />
     <CudaCompile Include="phi\cuda_phi2_skein512.cu" />
     <CudaCompile Include="phi\cuda_phi2_lyra2.cu" />
+    <CudaCompile Include="phi\cuda_phi2_br_streebog_echo512.cu" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ccminer.ico">

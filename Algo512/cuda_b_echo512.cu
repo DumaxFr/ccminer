@@ -364,7 +364,7 @@ void last_echo_round_final(const uint32_t sharedMemory[4][256], uint32_t *W, uin
 #pragma endregion
 
 __device__
-void echo_round(const uint32_t sharedMemory[4][256], uint32_t *W, uint32_t &k0) {
+static void echo_round(const uint32_t sharedMemory[4][256], uint32_t *W, uint32_t &k0) {
 
     // Big Sub Words
     #pragma unroll 16

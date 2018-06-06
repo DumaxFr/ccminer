@@ -103,6 +103,7 @@ its command line interface and options.
                           nist5       use to mine TalkCoin
                           penta       use to mine Joincoin / Pentablake
                           phi         use to mine LUXCoin
+                          phi2d       use to mine LUXCoin after fork
                           polytimos   use to mine Polytimos
                           quark       use to mine Quarkcoin
                           qubit       use to mine Qubit

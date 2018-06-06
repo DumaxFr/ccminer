@@ -1058,26 +1058,26 @@ void cuda_phi2_skein512_gpu_hash_64_final(const uint32_t threads, const uint32_t
         hash64[6] += hash64[3];
         hash64[0] += hash64[5];
         hash64[2] += hash64[7];
-        hash64[1] = ROL2(hash64[1], 25) ^ hash64[4];
+        //hash64[1] = ROL2(hash64[1], 25) ^ hash64[4];
         hash64[3] = ROL2(hash64[3], 29) ^ hash64[6];
-        hash64[5] = ROL2(hash64[5], 39) ^ hash64[0];
+        //hash64[5] = ROL2(hash64[5], 39) ^ hash64[0];
         hash64[7] = ROL2(hash64[7], 43) ^ hash64[2];
-        hash64[6] += hash64[1];
+        //hash64[6] += hash64[1];
         hash64[0] += hash64[7];
-        hash64[2] += hash64[5];
+        //hash64[2] += hash64[5];
         hash64[4] += hash64[3];
-        hash64[1] = ROL8(hash64[1]) ^ hash64[6];
+        //hash64[1] = ROL8(hash64[1]) ^ hash64[6];
         hash64[7] = ROL2(hash64[7], 35) ^ hash64[0];
-        hash64[5] = ROR8(hash64[5]) ^ hash64[2];
+        //hash64[5] = ROR8(hash64[5]) ^ hash64[2];
         hash64[3] = ROL2(hash64[3], 22) ^ hash64[4];
 
-		hash64[0] = vectorize(devectorize(hash64[0]) + devectorize(h0));
-		hash64[1] = vectorize(devectorize(hash64[1]) + devectorize(h1));
-		hash64[2] = vectorize(devectorize(hash64[2]) + devectorize(h2));
+		//hash64[0] = vectorize(devectorize(hash64[0]) + devectorize(h0));
+		//hash64[1] = vectorize(devectorize(hash64[1]) + devectorize(h1));
+		//hash64[2] = vectorize(devectorize(hash64[2]) + devectorize(h2));
 		hash64[3] = vectorize(devectorize(hash64[3]) + devectorize(h3));
-		hash64[4] = vectorize(devectorize(hash64[4]) + devectorize(h4));
-		hash64[5] = vectorize(devectorize(hash64[5]) + devectorize(h5) + 8);
-		hash64[6] = vectorize(devectorize(hash64[6]) + devectorize(h6) + 0xff00000000000000);
+		//hash64[4] = vectorize(devectorize(hash64[4]) + devectorize(h4));
+		//hash64[5] = vectorize(devectorize(hash64[5]) + devectorize(h5) + 8);
+		//hash64[6] = vectorize(devectorize(hash64[6]) + devectorize(h6) + 0xff00000000000000);
 		hash64[7] = vectorize(devectorize(hash64[7]) + devectorize(h7) + 18);
 
         // Phi2 special xor

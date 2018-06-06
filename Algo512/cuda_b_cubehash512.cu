@@ -24,12 +24,12 @@ static __device__ __host__ __forceinline__ void rrounds(uint32_t *x) {
 		x[28] = x[28] + x[12]; x[12] = ROTL32(x[12], 7);x[29] = x[29] + x[13];x[13] = ROTL32(x[13], 7);
 		x[30] = x[30] + x[14]; x[14] = ROTL32(x[14], 7);x[31] = x[31] + x[15];x[15] = ROTL32(x[15], 7);
 		/* "swap x_00klm with x_01klm" "xor x_1jklm into x_0jklm" */
-		xchg(x[0], x[8]); x[0] ^= x[16]; x[8] ^= x[24]; xchg(x[1], x[9]); x[1] ^= x[17]; x[9] ^= x[25];
-		xchg(x[2], x[10]); x[2] ^= x[18]; x[10] ^= x[26]; xchg(x[3], x[11]); x[3] ^= x[19]; x[11] ^= x[27];
-		xchg(x[4], x[12]); x[4] ^= x[20]; x[12] ^= x[28]; xchg(x[5], x[13]); x[5] ^= x[21]; x[13] ^= x[29];
-		xchg(x[6], x[14]); x[6] ^= x[22]; x[14] ^= x[30]; xchg(x[7], x[15]); x[7] ^= x[23]; x[15] ^= x[31];
+		SWAP(x[0], x[8]); x[0] ^= x[16]; x[8] ^= x[24]; SWAP(x[1], x[9]); x[1] ^= x[17]; x[9] ^= x[25];
+		SWAP(x[2], x[10]); x[2] ^= x[18]; x[10] ^= x[26]; SWAP(x[3], x[11]); x[3] ^= x[19]; x[11] ^= x[27];
+		SWAP(x[4], x[12]); x[4] ^= x[20]; x[12] ^= x[28]; SWAP(x[5], x[13]); x[5] ^= x[21]; x[13] ^= x[29];
+		SWAP(x[6], x[14]); x[6] ^= x[22]; x[14] ^= x[30]; SWAP(x[7], x[15]); x[7] ^= x[23]; x[15] ^= x[31];
 		/* "swap x_1jk0m with x_1jk1m" */
-		xchg(x[16], x[18]); xchg(x[17], x[19]); xchg(x[20], x[22]); xchg(x[21], x[23]); xchg(x[24], x[26]); xchg(x[25], x[27]); xchg(x[28], x[30]); xchg(x[29], x[31]);
+		SWAP(x[16], x[18]); SWAP(x[17], x[19]); SWAP(x[20], x[22]); SWAP(x[21], x[23]); SWAP(x[24], x[26]); SWAP(x[25], x[27]); SWAP(x[28], x[30]); SWAP(x[29], x[31]);
 		/* "add x_0jklm into x_1jklm modulo 2^32 rotate x_0jklm upwards by 11 bits" */
 		x[16] = x[16] + x[ 0]; x[ 0] = ROTL32(x[ 0],11);x[17] = x[17] + x[ 1];x[ 1] = ROTL32(x[ 1],11);
 		x[18] = x[18] + x[ 2]; x[ 2] = ROTL32(x[ 2],11);x[19] = x[19] + x[ 3];x[ 3] = ROTL32(x[ 3],11);
@@ -40,12 +40,12 @@ static __device__ __host__ __forceinline__ void rrounds(uint32_t *x) {
 		x[28] = x[28] + x[12]; x[12] = ROTL32(x[12],11);x[29] = x[29] + x[13];x[13] = ROTL32(x[13],11);
 		x[30] = x[30] + x[14]; x[14] = ROTL32(x[14],11);x[31] = x[31] + x[15];x[15] = ROTL32(x[15],11);
 		/* "swap x_0j0lm with x_0j1lm"  "xor x_1jklm into x_0jklm"  */
-		xchg(x[0], x[4]); x[0] ^= x[16]; x[4] ^= x[20]; xchg(x[1], x[5]); x[1] ^= x[17]; x[5] ^= x[21];
-		xchg(x[2], x[6]); x[2] ^= x[18]; x[6] ^= x[22]; xchg(x[3], x[7]); x[3] ^= x[19]; x[7] ^= x[23];
-		xchg(x[8], x[12]); x[8] ^= x[24]; x[12] ^= x[28]; xchg(x[9], x[13]); x[9] ^= x[25]; x[13] ^= x[29];
-		xchg(x[10], x[14]); x[10] ^= x[26]; x[14] ^= x[30]; xchg(x[11], x[15]); x[11] ^= x[27]; x[15] ^= x[31];
+		SWAP(x[0], x[4]); x[0] ^= x[16]; x[4] ^= x[20]; SWAP(x[1], x[5]); x[1] ^= x[17]; x[5] ^= x[21];
+		SWAP(x[2], x[6]); x[2] ^= x[18]; x[6] ^= x[22]; SWAP(x[3], x[7]); x[3] ^= x[19]; x[7] ^= x[23];
+		SWAP(x[8], x[12]); x[8] ^= x[24]; x[12] ^= x[28]; SWAP(x[9], x[13]); x[9] ^= x[25]; x[13] ^= x[29];
+		SWAP(x[10], x[14]); x[10] ^= x[26]; x[14] ^= x[30]; SWAP(x[11], x[15]); x[11] ^= x[27]; x[15] ^= x[31];
 		/* "swap x_1jkl0 with x_1jkl1" */
-		xchg(x[16], x[17]); xchg(x[18], x[19]); xchg(x[20], x[21]); xchg(x[22], x[23]); xchg(x[24], x[25]); xchg(x[26], x[27]); xchg(x[28], x[29]); xchg(x[30], x[31]);
+		SWAP(x[16], x[17]); SWAP(x[18], x[19]); SWAP(x[20], x[21]); SWAP(x[22], x[23]); SWAP(x[24], x[25]); SWAP(x[26], x[27]); SWAP(x[28], x[29]); SWAP(x[30], x[31]);
 
     }
 }

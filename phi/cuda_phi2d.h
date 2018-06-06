@@ -7,3 +7,5 @@
 extern void cuda_phi2_lyra2_cpu_init(uint64_t *);
 extern void cuda_phi2_lyra2_cpu_hash_32x2(const uint32_t, uint32_t*);
 
+extern void cuda_phi2_branhc_streeb_echo512_cpu_hash_64(const uint32_t, uint32_t*);
+
