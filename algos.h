@@ -110,7 +110,7 @@ static const char *algo_names[] = {
 	"nist5",
 	"penta",
 	"phi",
-	"phi2d",
+	"phi2",
 	"polytimos",
 	"quark",
 	"qubit",

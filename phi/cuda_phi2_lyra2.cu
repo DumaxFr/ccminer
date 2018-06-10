@@ -4,12 +4,15 @@
  * DumaxFr@github 2018 - Dual Lyra2 for Phi2
  */
 
+#include <stdio.h>
 
 #include "cuda_helper.h"
 #include "cuda_vector_uint2x4.h"
 
-
-#define PHI2LYRA2_TPB64 32
+// Limited by shared mem max capacity (TPBx1532 <= 48kb)
+// 48kb prefered to fit 2 times in 96kb max shared on sm52 & sm61)
+#define PHI2LYRA2_TPB64_MAIN 32
+#define PHI2LYRA2_TPB64_LDST 128
 
 #ifdef __INTELLISENSE__
 /* just for vstudio code colors */
@@ -147,7 +150,7 @@ static void round_lyra(uint2x4* s)
 }
 
 __device__ __forceinline__
-static void reduceDuplex(uint2 state[4], uint32_t thread, const uint32_t threads)
+static void reduceDuplex(uint2 state[4], const uint32_t thread, const uint32_t threads)
 {
 	uint2 state1[3];
 
@@ -175,7 +178,7 @@ static void reduceDuplex(uint2 state[4], uint32_t thread, const uint32_t threads
 }
 
 __device__ __forceinline__
-static void reduceDuplexRowSetup(const int rowIn, const int rowInOut, const int rowOut, uint2 state[4], uint32_t thread, const uint32_t threads)
+static void reduceDuplexRowSetup(const int rowIn, const int rowInOut, const int rowOut, uint2 state[4], const uint32_t thread, const uint32_t threads)
 {
 	uint2 state1[3], state2[3];
 
@@ -226,7 +229,7 @@ static void reduceDuplexRowt(const int rowIn, const int rowInOut, const int rowO
 		LD4S(state1, rowIn, i, thread, threads);
 		LD4S(state2, rowInOut, i, thread, threads);
 
-#pragma unroll
+        #pragma unroll
 		for (int j = 0; j < 3; j++)
 			state[j] ^= state1[j] + state2[j];
 
@@ -255,7 +258,7 @@ static void reduceDuplexRowt(const int rowIn, const int rowInOut, const int rowO
 
 		LD4S(state1, rowOut, i, thread, threads);
 
-#pragma unroll
+        #pragma unroll
 		for (int j = 0; j < 3; j++)
 			state1[j] ^= state[j];
 
@@ -318,19 +321,9 @@ static void reduceDuplexRowt_8(const int rowInOut, uint2* state, const uint32_t 
 		state[j] ^= last[j];
 }
 
-//__constant__ uint2x4 blake2b_IV[2] = {
-//	0xf3bcc908lu, 0x6a09e667lu,
-//	0x84caa73blu, 0xbb67ae85lu,
-//	0xfe94f82blu, 0x3c6ef372lu,
-//	0x5f1d36f1lu, 0xa54ff53alu,
-//	0xade682d1lu, 0x510e527flu,
-//	0x2b3e6c1flu, 0x9b05688clu,
-//	0xfb41bd6blu, 0x1f83d9ablu,
-//	0x137e2179lu, 0x5be0cd19lu
-//};
 
 __global__
-__launch_bounds__(64, 1)
+__launch_bounds__(PHI2LYRA2_TPB64_LDST, 8)
 void cuda_phi2_lyra2_gpu_hash_32p1_1(const uint32_t threads, const uint2* const __restrict__ g_hash) {
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -369,7 +362,7 @@ void cuda_phi2_lyra2_gpu_hash_32p1_1(const uint32_t threads, const uint2* const 
 }
 
 __global__
-__launch_bounds__(64, 1)
+__launch_bounds__(PHI2LYRA2_TPB64_LDST, 8)
 void cuda_phi2_lyra2_gpu_hash_32p2_1(const uint32_t threads, const uint2* const __restrict__ g_hash) {
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -408,7 +401,7 @@ void cuda_phi2_lyra2_gpu_hash_32p2_1(const uint32_t threads, const uint2* const 
 }
 
 __global__
-__launch_bounds__(PHI2LYRA2_TPB64, 1)
+__launch_bounds__(PHI2LYRA2_TPB64_MAIN, 1)
 void cuda_phi2_lyra2_gpu_hash_32_2(const uint32_t threads) {
 
 	const uint32_t thread = blockDim.y * blockIdx.x + threadIdx.y;
@@ -453,7 +446,7 @@ void cuda_phi2_lyra2_gpu_hash_32_2(const uint32_t threads) {
 }
 
 __global__
-__launch_bounds__(64, 1)
+__launch_bounds__(PHI2LYRA2_TPB64_LDST, 8)
 void cuda_phi2_lyra2_gpu_hash_32p1_3(const uint32_t threads, uint2 *g_hash) {
 
 	const uint32_t thread = blockDim.x * blockIdx.x + threadIdx.x;
@@ -479,7 +472,7 @@ void cuda_phi2_lyra2_gpu_hash_32p1_3(const uint32_t threads, uint2 *g_hash) {
 }
 
 __global__
-__launch_bounds__(64, 1)
+__launch_bounds__(PHI2LYRA2_TPB64_LDST, 8)
 void cuda_phi2_lyra2_gpu_hash_32p2_3(const uint32_t threads, uint2 *g_hash) {
 
 	const uint32_t thread = blockDim.x * blockIdx.x + threadIdx.x;
@@ -513,20 +506,20 @@ void cuda_phi2_lyra2_cpu_init(uint64_t *d_matrix) {
 
 __host__
 void cuda_phi2_lyra2_cpu_hash_32x2(const uint32_t threads, uint32_t *d_hash) {
-	uint32_t tpb = PHI2LYRA2_TPB64;
+	uint32_t tpb = PHI2LYRA2_TPB64_MAIN;
 
 	dim3 grid1((threads * 4 + tpb - 1) / tpb);
 	dim3 block1(4, tpb >> 2);
 
-	dim3 grid2((threads + 64 - 1) / 64);
-	dim3 block2(64);
+	dim3 grid2((threads + PHI2LYRA2_TPB64_LDST - 1) / PHI2LYRA2_TPB64_LDST);
+	dim3 block2(PHI2LYRA2_TPB64_LDST);
 
 	cuda_phi2_lyra2_gpu_hash_32p1_1 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
-	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 24 * (8 - 0) * sizeof(uint2) * tpb >>> (threads);
+	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 192 * sizeof(uint2) * tpb >>> (threads);
 	cuda_phi2_lyra2_gpu_hash_32p1_3 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
 
 	cuda_phi2_lyra2_gpu_hash_32p2_1 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
-	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 24 * (8 - 0) * sizeof(uint2) * tpb >>> (threads);
+	cuda_phi2_lyra2_gpu_hash_32_2 <<< grid1, block1, 192 * sizeof(uint2) * tpb >>> (threads);
 	cuda_phi2_lyra2_gpu_hash_32p2_3 <<< grid2, block2 >>> (threads, (uint2*)d_hash);
 
 }

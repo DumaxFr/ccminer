@@ -1,10 +1,5 @@
 //
-//
-//  PHI1612 algo
-//  Skein + JH + CubeHash + Fugue + Gost + Echo
-//
-//  Implemented by anorganix @ bitcointalk on 01.10.2017
-//  Feel free to send some satoshis to 1Bitcoin8tfbtGAQNFxDRUVUfFgFWKoWi9
+//  PHI2 algo
 //
 //
 
@@ -19,7 +14,8 @@ extern "C" {
 
 #include "miner.h"
 #include "cuda_helper.h"
-#include ".\cuda_phi2d.h"
+
+#include "cuda_phi2.h"
 
 #include <stdio.h>
 #include <memory.h>
@@ -77,7 +73,7 @@ extern "C" void phi2hash(void *output, const void *input)
 }
 
 //#define _DEBUG
-#define _DEBUG_PREFIX "phi2d-"
+#define _DEBUG_PREFIX "phi2-"
 #include "cuda_debug.cuh"
 
 static bool init[MAX_GPUS] = { 0 };
@@ -127,7 +123,7 @@ static cudaEvent_t phi_kernel_stop[MAX_GPUS];
 #endif // _PROFILE_METRICS_PHI
 
 
-extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
+extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
 {
 	uint32_t *pdata = work->data;
 	uint32_t *ptarget = work->target;
@@ -135,10 +131,10 @@ extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce,
 	const uint32_t first_nonce = pdata[19];
 	const int dev_id = device_map[thr_id];
 
-	int intensity = (device_sm[dev_id] >= 500 && !is_windows()) ? 16 : 15; // 2^18 = 262144 cuda threads
+	int intensity = (device_sm[dev_id] >= 500 && !is_windows()) ? 16 : 15;
 	if (device_sm[dev_id] >= 600) intensity = 16;
 
-    // least common multiple of all TPB algos
+    // least common multiple of all algo TPBs
     uint32_t lcm = 7680; // should be calculated by a cuda_get_lcm function
     uint32_t throughput = cuda_default_throughput_lcm(thr_id, 1U << intensity, lcm);
     if (init[thr_id] && max_nonce - first_nonce < throughput) {
@@ -169,7 +165,6 @@ extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce,
 		CUDA_SAFE_CALL(cudaMalloc(&d_matrix[thr_id], matrix_sz * throughput));
         cuda_phi2_lyra2_cpu_init(d_matrix[thr_id]);
 
-		//cuda_check_cpu_init(thr_id, throughput);
 		init[thr_id] = true;
 	}
 
@@ -233,7 +228,6 @@ extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce,
         STOP_METRICS(4)
         #endif // _PROFILE_METRICS_PHI
 
-        *hashes_done = pdata[19] - first_nonce + throughput;
 
         cudaMemcpy(work->nonces, d_resNonce[thr_id], MAX_NONCES * sizeof(uint32_t), cudaMemcpyDeviceToHost);
 
@@ -246,6 +240,7 @@ extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce,
 			if (vhash[7] <= Htarg && fulltest(vhash, ptarget)) {
 				work->valid_nonces = 1;
 				work_set_target_ratio(work, vhash);
+                *hashes_done = pdata[19] - first_nonce + throughput;
 				if (work->nonces[1] != UINT32_MAX) {
 					be32enc(&endiandata[19], work->nonces[1]);
 					phi2hash(vhash, endiandata);
@@ -290,15 +285,14 @@ extern "C" int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce,
 
 
 // cleanup
-extern "C" void free_phi2d(int thr_id)
+extern "C" void free_phi2(int thr_id)
 {
 	if (!init[thr_id])
 		return;
 
 	cudaThreadSynchronize();
 	cudaFree(d_hash[thr_id]);
-	cudaFree(d_resNonce[thr_id]); // done in cuda_chech_cpu_free
-	//cuda_check_cpu_free(thr_id);
+	cudaFree(d_resNonce[thr_id]);
 	init[thr_id] = false;
 
 	cudaDeviceSynchronize();

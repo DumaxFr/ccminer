@@ -13,7 +13,6 @@
 // Further improved with shared memory partial utilization
 // Tested under CUDA7.5 toolkit for cp 5.0/5.2
 
-//#include <miner.h>
 #include <cuda_helper.h>
 #include <cuda_vectors.h>
 #include <cuda_vector_uint2x4.h>

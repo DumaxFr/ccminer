@@ -395,7 +395,7 @@
     <ClCompile Include="neoscrypt\neoscrypt-cpu.c" />
     <ClInclude Include="neoscrypt\cuda_vectors.h" />
     <ClInclude Include="phi\cuda_phi.h" />
-    <ClInclude Include="phi\cuda_phi2d.h" />
+    <ClInclude Include="phi\cuda_phi2.h" />
     <ClInclude Include="phi\cuda_phi2_skein512.h" />
     <ClInclude Include="x11\cuda_x11_simd512_sm2.cuh" />
     <ClInclude Include="x16x\cuda_x16x.h" />
@@ -553,7 +553,7 @@
     <CudaCompile Include="phi\cuda_phi2_br_streebog_echo512.cu" />
     <CudaCompile Include="phi\cuda_phi2_lyra2.cu" />
     <CudaCompile Include="phi\cuda_phi2_skein512.cu" />
-    <CudaCompile Include="phi\phi2d.cu" />
+    <CudaCompile Include="phi\phi2.cu" />
     <CudaCompile Include="scrypt\blake.cu" />
     <CudaCompile Include="scrypt\keccak.cu" />
     <CudaCompile Include="scrypt\sha256.cu" />

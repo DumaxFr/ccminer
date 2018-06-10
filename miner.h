@@ -292,7 +292,7 @@ extern "C" {
     extern int scanhash_nist5(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_pentablake(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
-    extern int scanhash_phi2d(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
+    extern int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_polytimos(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_quark(int thr_id, struct work *work, uint32_t max_nonce, unsigned long *hashes_done);
     extern int scanhash_qubit(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
@@ -358,7 +358,7 @@ extern "C" {
     extern void free_nist5(int thr_id);
     extern void free_pentablake(int thr_id);
     extern void free_phi(int thr_id);
-    extern void free_phi2d(int thr_id);
+    extern void free_phi2(int thr_id);
     extern void free_polytimos(int thr_id);
     extern void free_quark(int thr_id);
     extern void free_qubit(int thr_id);

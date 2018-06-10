@@ -1,11 +1,16 @@
 
-ccminer 2.2.5 (Feb 2018)                            "x16r algo"
+ccminer dumax-0.9.0 (June 10th 2018)                "Phi2 algo"
 ---------------------------------------------------------------
 
 ***************************************************************
 If you find this tool useful and like to support its continuous
           development, then consider a donation.
 
+DumaxFr@github:
+  LUX  : LWcYLSx37F37gHjbmvhwQPQ8PhyDYibmpr
+  RVN  : RQXpsvSaVrGYo4tyGityWDNBQMFcnqANyj
+  BTC  : 1AtQXFbnzYTsjzy2bzSH6nPGxqZ32NG42T
+		  
 tpruvot@github:
   BTC  : 1AJdfCpLWPNoAMDfHF1wD5y8VgKSSTHxPo
   DCR  : DsUCcACGcyP8McNMRXQwbtpDxaVUYLDQDeU
@@ -102,8 +107,8 @@ its command line interface and options.
                           neoscrypt   use to mine FeatherCoin, Trezarcoin, Orbitcoin, etc
                           nist5       use to mine TalkCoin
                           penta       use to mine Joincoin / Pentablake
-                          phi         use to mine LUXCoin
-                          phi2d       use to mine LUXCoin after fork
+                          phi         use to mine Folm
+                          phi2        use to mine LUXCoin
                           polytimos   use to mine Polytimos
                           quark       use to mine Quarkcoin
                           qubit       use to mine Qubit
@@ -219,13 +224,11 @@ Wildkeccak specific:
 
 >>> Examples <<<
 
+Example for Ravencoin mining on thetechnicalspool.com with all nvidia gpus in your system
+    ccminer -a x16r -o stratum+tcp://thetechnicalspool.com:3636 -u <<username.worker>> -p <<workerpassword>>
 
-Example for Heavycoin Mining on heavycoinpool.com with a single gpu in your system
-    ccminer -t 1 -a heavy -o stratum+tcp://stratum01.heavycoinpool.com:5333 -u <<username.worker>> -p <<workerpassword>> -v 8
-
-
-Example for Heavycoin Mining on hvc.1gh.com with a dual gpu in your system
-    ccminer -t 2 -a heavy -o stratum+tcp://hvcpool.1gh.com:5333/ -u <<WALLET>> -p x -v 8
+Example for Ravencoin mining on thetechnicalspool.com with a single gpu from many in your system (gpu number from 0 to x)
+    ccminer -a x16r -o stratum+tcp://thetechnicalspool.com:3636 -u <<username.worker>> -p <<workerpassword>> -d 1
 
 
 Example for Fuguecoin solo-mining with 4 gpu's in your system and a Fuguecoin-wallet running on localhost
@@ -274,15 +277,25 @@ I plan to add a json format later, if requests are formatted in json too..
 >>> Additional Notes <<<
 
 This code should be running on nVidia GPUs ranging from compute capability
-3.0 up to compute capability 5.2. Support for Compute 2.0 has been dropped
+5.2 up to compute capability 6.1 (7.0). Support for Compute 3.0 has been dropped
 so we can more efficiently implement new algorithms using the latest hardware
 features.
 
+
 >>> RELEASE HISTORY <<<
-  Feb. 2017       v2.2.5
+
+  June 10th 2018  dumax-0.9.0 (initial fork release)
+                  Moved to visual studio 2015 and CUDA 9.1
+				  Improved x16r
+				  Added x16s (same kernels than x16r)
+				  Added Phi2 algo (unoptimized)
+				  Improved Phi, x17
+
+>>> RELEASE HISTORY by tpruvot <<<
+  Feb. 2018       v2.2.5
                   New x16r algo
 
-  Jan. 04th 2017  v2.2.4
+  Jan. 04th 2018  v2.2.4
                   Improve lyra2v2
                   Higher keccak default intensity
                   Drop SM 2.x support by default, for CUDA 9 and more recent
@@ -602,6 +615,4 @@ Source code is included to satisfy GNU GPL V3 requirements.
 
 With kind regards,
 
-   Christian Buchner ( Christian.Buchner@gmail.com )
-   Christian H. ( Chris84 )
-   Tanguy Pruvot ( tpruvot@github )
+   Stephane Duma ( DumaxFr@github )

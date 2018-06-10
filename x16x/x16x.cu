@@ -524,9 +524,11 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
             groestl512_setBlock_80(thr_id, endiandata);
             break;
         case JH:
+            // !!!
             jh512_setBlock_80(thr_id, endiandata);
             break;
         case KECCAK:
+            // !!!
             //cuda_base_keccak512_setBlock_80(endiandata);
             keccak512_setBlock_80(thr_id, endiandata);
             break;
@@ -538,7 +540,6 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
             break;
         case CUBEHASH:
             cuda_base_cubehash512_setBlock_80(endiandata);
-            //cubehash512_setBlock_80(thr_id, endiandata);
             break;
         case SHAVITE:
             cuda_base_shavite512_setBlock_80((void*)endiandata);
@@ -603,10 +604,12 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                 TRACE("grstl80:");
                 break;
             case JH:
+                // !!!
                 jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
                 TRACE("jh51280:");
                 break;
             case KECCAK:
+                // !!!
                 keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
                 TRACE("kecck80:");
                 break;
@@ -619,7 +622,6 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                 TRACE("luffa80:");
                 break;
             case CUBEHASH:
-                //cubehash512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
                 cuda_base_cubehash512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
                 TRACE("cube 80:");
                 break;
