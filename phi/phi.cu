@@ -128,7 +128,7 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 	int intensity = (device_sm[dev_id] >= 500 && !is_windows()) ? 19 : 18; // 2^18 = 262144 cuda threads
 	if (device_sm[dev_id] >= 600) intensity = 20;
 
-    // least common multiple of all TPB algos
+    // least common multiple of all algo TPBs
     uint32_t lcm = 3840; // should be calculated by a cuda_get_lcm function
     uint32_t throughput = cuda_default_throughput_lcm(thr_id, 1U << intensity, lcm);
     if (init[thr_id] && max_nonce - first_nonce < throughput) {

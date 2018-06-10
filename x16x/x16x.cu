@@ -436,29 +436,15 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
         }
         gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
 
-        //cuda_aes_cpu_init(thr_id);
-
         quark_blake512_cpu_init(thr_id, throughput);
-        //quark_bmw512_cpu_init(thr_id, throughput);
         quark_groestl512_cpu_init(thr_id, throughput);
-        //quark_skein512_cpu_init(thr_id, throughput);
-        quark_jh512_cpu_init(thr_id, throughput);
         quark_keccak512_cpu_init(thr_id, throughput);
         cuda_base_keccak512_cpu_init();
-        //qubit_luffa512_cpu_init(thr_id, throughput);
-        //x11_luffa512_cpu_init(thr_id, throughput); // 64
-        //x11_shavite512_cpu_init(thr_id, throughput); // 80
         x11_simd512_cpu_init(thr_id, throughput); // 64
-        //x11_echo512_cpu_init(thr_id, throughput);
         cuda_base_echo512_cpu_init(thr_id);
-        //x13_hamsi512_cpu_init(thr_id, throughput);
         cuda_base_hamsi512_cpu_init();
-        //x13_fugue512_cpu_init(thr_id, throughput);
-        //x16_fugue512_cpu_init(thr_id, throughput);
-        //x14_shabal512_cpu_init(thr_id, throughput);
         x15_whirlpool_cpu_init(thr_id, throughput, 0);
         x16_whirlpool512_init(thr_id, throughput);
-        //x17_sha512_cpu_init(thr_id, throughput);
         cuda_base_sha512_cpu_init();
 
         CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t)64 * throughput), 0);
@@ -701,7 +687,6 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                     } else {
                         cuda_base_jh512_cpu_hash_64(throughput, d_hash[thr_id]);
                     }
-                    //quark_jh512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], i);
                     TRACE("jh512  :");
                     break;
                 case KECCAK:
@@ -871,14 +856,14 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                 if (!warn) {
                     if (opt_debug) {
                         gpulog(LOG_DEBUG, thr_id, "result for %08x does not validate on CPU! %s", work->nonces[0], hashOrder);
-                        gpulog(LOG_DEBUG, thr_id, "target short : %64s", bin2hex((uchar *)&ptarget[6], 8));
-                        gpulog(LOG_DEBUG, thr_id, "target long  : %s", bin2hex((uchar *)ptarget, 32));
-                        gpulog(LOG_DEBUG, thr_id, "cpuhash      : %s", bin2hex((uchar *)vhash, 32));
-                        gpulog(LOG_DEBUG, thr_id, "data 00..04 : %s", bin2hex((uchar *)pdata, 20));
-                        gpulog(LOG_DEBUG, thr_id, "data 05..09 : %s", bin2hex((uchar *)&pdata[5], 20));
-                        gpulog(LOG_DEBUG, thr_id, "data 10..14 : %s", bin2hex((uchar *)&pdata[10], 20));
-                        gpulog(LOG_DEBUG, thr_id, "data 15..19 : %s", bin2hex((uchar *)&pdata[15], 20));
-                        gpulog(LOG_DEBUG, thr_id, "data 00     : %08x", pdata[0]);
+                        //gpulog(LOG_DEBUG, thr_id, "target short : %64s", bin2hex((uchar *)&ptarget[6], 8));
+                        //gpulog(LOG_DEBUG, thr_id, "target long  : %s", bin2hex((uchar *)ptarget, 32));
+                        //gpulog(LOG_DEBUG, thr_id, "cpuhash      : %s", bin2hex((uchar *)vhash, 32));
+                        //gpulog(LOG_DEBUG, thr_id, "data 00..04 : %s", bin2hex((uchar *)pdata, 20));
+                        //gpulog(LOG_DEBUG, thr_id, "data 05..09 : %s", bin2hex((uchar *)&pdata[5], 20));
+                        //gpulog(LOG_DEBUG, thr_id, "data 10..14 : %s", bin2hex((uchar *)&pdata[10], 20));
+                        //gpulog(LOG_DEBUG, thr_id, "data 15..19 : %s", bin2hex((uchar *)&pdata[15], 20));
+                        //gpulog(LOG_DEBUG, thr_id, "data 00     : %08x", pdata[0]);
                     }
                     warn++;
                     // don't see the reason to hash again from nonce to startNonce+throughput
@@ -888,13 +873,13 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                     if (!opt_quiet) {
                         gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
                             work->nonces[0], algo_strings[algo80], hashOrder);
-                        if (opt_debug) {
-                            gpulog(LOG_DEBUG, thr_id, "target short : %64s", bin2hex((uchar *)&ptarget[6], 8));
-                            gpulog(LOG_DEBUG, thr_id, "target long  : %s", bin2hex((uchar *)ptarget, 32));
-                            gpulog(LOG_DEBUG, thr_id, "cpuhash      : %s", bin2hex((uchar *)vhash, 32));
-                            gpulog(LOG_DEBUG, thr_id, "data 00..09 : %s", bin2hex((uchar *)pdata, 40));
-                            gpulog(LOG_DEBUG, thr_id, "data 10..19 : %s", bin2hex((uchar *)&pdata[10], 40));
-                        }
+                        //if (opt_debug) {
+                        //    gpulog(LOG_DEBUG, thr_id, "target short : %64s", bin2hex((uchar *)&ptarget[6], 8));
+                        //    gpulog(LOG_DEBUG, thr_id, "target long  : %s", bin2hex((uchar *)ptarget, 32));
+                        //    gpulog(LOG_DEBUG, thr_id, "cpuhash      : %s", bin2hex((uchar *)vhash, 32));
+                        //    gpulog(LOG_DEBUG, thr_id, "data 00..09 : %s", bin2hex((uchar *)pdata, 40));
+                        //    gpulog(LOG_DEBUG, thr_id, "data 10..19 : %s", bin2hex((uchar *)&pdata[10], 40));
+                        //}
                     }
                     warn = 0;
                 }
@@ -932,8 +917,6 @@ extern "C" void free_x16r(int thr_id) {
 
     quark_groestl512_cpu_free(thr_id);
     x11_simd512_cpu_free(thr_id);
-    //x13_fugue512_cpu_free(thr_id);
-    //x16_fugue512_cpu_free(thr_id); // to merge with x13_fugue512 ?
     x15_whirlpool_cpu_free(thr_id);
 
     cuda_check_cpu_free(thr_id);

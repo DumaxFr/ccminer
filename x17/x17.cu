@@ -234,13 +234,11 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
 		x11_luffaCubehash512_cpu_init(thr_id, throughput);
 		x11_shavite512_cpu_init(thr_id, throughput);
 		x11_simd512_cpu_init(thr_id, throughput);
-        //x11_echo512_cpu_init(thr_id, throughput);
-        //echo512_cpu_init(thr_id);
+        cuda_base_echo512_cpu_init(thr_id);
         x13_hamsi512_cpu_init(thr_id, throughput);
 		x13_fugue512_cpu_init(thr_id, throughput);
 		x14_shabal512_cpu_init(thr_id, throughput);
 		x15_whirlpool_cpu_init(thr_id, throughput, 0);
-		//x17_sha512_cpu_init(thr_id, throughput);
 		cuda_base_sha512_cpu_init();
 		x17_haval256_cpu_init(thr_id, throughput);
 
@@ -332,7 +330,6 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
         
         START_METRICS
         #endif // _PROFILE_METRICS_X17
-        //x11_echo512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
         cuda_base_echo512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_X17
         STOP_METRICS(9)
@@ -363,7 +360,6 @@ extern "C" int scanhash_x17(int thr_id, struct work* work, uint32_t max_nonce, u
         
         START_METRICS
         #endif // _PROFILE_METRICS_X17
-		//x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
 		cuda_base_sha512_cpu_hash_64(throughput, d_hash[thr_id]); order++;
         #ifdef _PROFILE_METRICS_X17
         STOP_METRICS(14)
