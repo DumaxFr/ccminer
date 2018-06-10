@@ -168,7 +168,7 @@ extern "C" int scanhash_phi(int thr_id, struct work* work, uint32_t max_nonce, u
 
     #ifdef _PROFILE_METRICS_PHI
     float milliseconds;
-    boolean metrics_do_first_start = false;
+    bool metrics_do_first_start = false;
     START_METRICS
     #endif // _PROFILE_METRICS_PHI
 
