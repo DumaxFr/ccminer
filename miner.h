@@ -76,7 +76,7 @@ extern "C" {
         LOG_NOTICE,
         LOG_INFO,
         LOG_DEBUG,
-        LOG_CRITICAL,
+        //LOG_CRITICAL,
         /* custom notices */
         LOG_BLUE = 0x10,
         LOG_RAW = 0x99
