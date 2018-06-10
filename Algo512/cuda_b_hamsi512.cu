@@ -7,7 +7,7 @@
 
 #include "cuda_helper.h"
 
-#include ".\cuda_b_hamsi512.h"
+#include "./cuda_b_hamsi512.h"
 
 #define HAMSI512_TPB80 256
 #define HAMSI12_TPB64 256

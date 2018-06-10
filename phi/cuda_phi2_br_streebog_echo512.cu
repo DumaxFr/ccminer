@@ -11,9 +11,9 @@
 #include "cuda_vector_uint2x4.h"
 
 #define INTENSIVE_GMF
-#include "aes\cuda_aes.cuh"
+#include "aes/cuda_aes.cuh"
 
-#include "x11\streebog_arrays.cuh"
+#include "x11/streebog_arrays.cuh"
 
 #ifdef __INTELLISENSE__
 extern __device__ __device_builtin__ void __threadfence_block(void);
