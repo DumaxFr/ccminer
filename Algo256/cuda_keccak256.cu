@@ -45,7 +45,7 @@ uint2 xor3x(const uint2 a,const uint2 b,const uint2 c) {
 }
 
 __device__ __forceinline__
-uint2 chi(const uint2 a,const uint2 b,const uint2 c) { // keccak chi
+static uint2 chi(const uint2 a,const uint2 b,const uint2 c) { // keccak chi
 	uint2 result;
 #if __CUDA_ARCH__ >= 500 && CUDA_VERSION >= 7050
 	asm ("lop3.b32 %0, %1, %2, %3, 0xD2;" : "=r"(result.x) : "r"(a.x), "r"(b.x),"r"(c.x)); //0xD2 = 0xF0 ^ ((~0xCC) & 0xAA)
@@ -56,16 +56,17 @@ uint2 chi(const uint2 a,const uint2 b,const uint2 c) { // keccak chi
 	return result;
 }
 
-__device__ __forceinline__
-uint64_t xor5(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint64_t e)
-{
-	uint64_t result;
-	asm("xor.b64 %0, %1, %2;" : "=l"(result) : "l"(d) ,"l"(e));
-	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(c));
-	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(b));
-	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(a));
-	return result;
-}
+// Moved to cuda_helper
+//__device__ __forceinline__
+//static uint64_t xor5(uint64_t a, uint64_t b, uint64_t c, uint64_t d, uint64_t e)
+//{
+//	uint64_t result;
+//	asm("xor.b64 %0, %1, %2;" : "=l"(result) : "l"(d) ,"l"(e));
+//	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(c));
+//	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(b));
+//	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(a));
+//	return result;
+//}
 
 #if __CUDA_ARCH__ <= 500
 __global__ __launch_bounds__(TPB50, 2)

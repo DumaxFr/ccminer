@@ -234,8 +234,20 @@ uint64_t xor3(uint64_t a, uint64_t b, uint64_t c)
 		: "=l"(result) : "l"(a), "l"(b), "l"(c));
 	return result;
 }
+
+__device__ __forceinline__
+uint64_t xor5(uint64_t a, uint64_t b, uint64_t c, uint64_t d,uint64_t e)
+{
+	uint64_t result;
+	asm("xor.b64 %0, %1, %2;" : "=l"(result) : "l"(d) ,"l"(e));
+	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(c));
+	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(b));
+	asm("xor.b64 %0, %0, %1;" : "+l"(result) : "l"(a));
+	return result;
+}
 #else
 #define xor3(a,b,c) (a ^ b ^ c)
+#define xor5(a,b,c,d,e) (a ^ b ^ c ^ d ^ e)
 #endif
 
 #if USE_XOR_ASM_OPTS

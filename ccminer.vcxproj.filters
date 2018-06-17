@@ -600,7 +600,6 @@
       <Filter>Source Files\equi</Filter>
     </ClInclude>
     <ClInclude Include="cuda_uint2_utils.h" />
-    <ClInclude Include="Algo512\cuda_echo512_inlines.cuh" />
     <ClInclude Include="aes\cuda_aes.cuh" />
     <ClInclude Include="phi\cuda_phi.h" />
     <ClInclude Include="x16x\cuda_x16x.h">

@@ -339,7 +339,6 @@
     <ClInclude Include="Algo512\cuda_b_jh512.h" />
     <ClInclude Include="Algo512\cuda_b_keccak512.h" />
     <ClInclude Include="Algo512\cuda_b_sha512.h" />
-    <ClInclude Include="Algo512\cuda_echo512_inlines.cuh" />
     <ClInclude Include="Algo512\cuda_b_fugue512.h" />
     <ClInclude Include="Algo512\cuda_b_luffa512.h" />
     <ClInclude Include="Algo512\cuda_b_shabal512.h" />

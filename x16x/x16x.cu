@@ -515,8 +515,8 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
             break;
         case KECCAK:
             // !!!
-            //cuda_base_keccak512_setBlock_80(endiandata);
             keccak512_setBlock_80(thr_id, endiandata);
+            //cuda_base_keccak512_setBlock_80(endiandata);
             break;
         case SKEIN:
             cuda_base_skein512_setBlock_80((void*)endiandata);
@@ -597,6 +597,7 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
             case KECCAK:
                 // !!!
                 keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+                //cuda_base_keccak512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
                 TRACE("kecck80:");
                 break;
             case SKEIN:
