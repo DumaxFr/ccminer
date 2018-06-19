@@ -1,4 +1,4 @@
-AC_INIT([ccminer], [dumax-0.9.0], [], [ccminer], [https://github.com/DumaxFr/ccminer])
+AC_INIT([ccminer], [dumax-0.9.1], [], [ccminer], [https://github.com/DumaxFr/ccminer])
 
 AC_PREREQ([2.59c])
 AC_CANONICAL_SYSTEM
