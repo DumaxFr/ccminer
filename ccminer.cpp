@@ -269,7 +269,7 @@ Options:\n\
 			nist5       NIST5 (TalkCoin)\n\
 			penta       Pentablake hash (5x Blake 512)\n\
 			phi         Lux, Folm ...\n\
-			phi2       Dirty Lux Phi2\n\
+			phi2        Dirty Lux Phi2\n\
 			polytimos   Politimos\n\
 			quark       Quark\n\
 			qubit       Qubit\n\
