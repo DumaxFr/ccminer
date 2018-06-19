@@ -1,5 +1,5 @@
 
-ccminer dumax-0.9.0 (June 10th 2018)                "Phi2 algo"
+ccminer dumax-0.9.1 (June 19th 2018)                "Seed pack"
 ---------------------------------------------------------------
 
 ***************************************************************
@@ -284,12 +284,18 @@ features.
 
 >>> RELEASE HISTORY <<<
 
+  June 19th 2018  dumax-0.9.1
+                  Improved x16r/x16s (Keccak512-64)
+				  Added gpu temp colors (from BCT tpruvot's ccminer)
+				  Fixed Phi2 default share difficulty treshold
+				  
   June 10th 2018  dumax-0.9.0 (initial fork release)
                   Moved to visual studio 2015 and CUDA 9.1
-				  Improved x16r
-				  Added x16s (same kernels than x16r)
-				  Added Phi2 algo (unoptimized)
-				  Improved Phi, x17
+                  Improved x16r
+                  Added x16s (same kernels than x16r)
+                  Added Phi2 algo (unoptimized)
+                  Improved Phi, x17
+
 
 >>> RELEASE HISTORY by tpruvot <<<
   Feb. 2018       v2.2.5

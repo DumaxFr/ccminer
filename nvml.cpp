@@ -2192,6 +2192,16 @@ extern bool opt_debug_threads;
 extern bool opt_hwmonitor;
 extern int num_cpus;
 
+void format_colored_temp(char *output, const uint32_t temp) {
+    if (temp < 70) {
+        sprintf(output, "%s%uC%s", CL_LGR, temp, CL_N);
+    } else if (temp < 80) {
+        sprintf(output, "%s%uC%s", CL_LYL, temp, CL_N);
+    } else {
+        sprintf(output, "%s%uC%s", CL_LRD, temp, CL_N);
+    }
+}
+
 void *monitor_thread(void *userdata)
 {
 	int thr_id = -1;
@@ -2257,9 +2267,11 @@ void *monitor_thread(void *userdata)
 			}
 
 			if (opt_hwmonitor && (time(NULL) - cgpu->monitor.tm_displayed) > 60) {
-				gpulog(LOG_INFO, thr_id, "%u MHz %s%uC FAN %u%%",
+                char coloredTemp[16] = { 0 };
+                format_colored_temp(coloredTemp, cgpu->monitor.gpu_temp);
+				gpulog(LOG_INFO, thr_id, "%u MHz %s%s%s%s FAN %u%%",
 					cgpu->monitor.gpu_clock/*, cgpu->monitor.gpu_memclock*/,
-					khw, cgpu->monitor.gpu_temp, cgpu->monitor.gpu_fan
+					CL_LCY, khw, CL_N, coloredTemp, cgpu->monitor.gpu_fan
 				);
 				cgpu->monitor.tm_displayed = (uint32_t)time(NULL);
 			}
@@ -2273,4 +2285,5 @@ abort:
 		applog(LOG_DEBUG, "%s() died", __func__);
 	return NULL;
 }
+
 #endif
