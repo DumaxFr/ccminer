@@ -285,7 +285,7 @@ static void gpuhwinfos(int gpu_id)
 	cgpu->gpu_power = gpu_power(cgpu);
 	cgpu->gpu_plimit = gpu_plimit(cgpu);
 	gpu_info(cgpu);
-#ifdef WIN32
+#if defined(WIN32) && !defined(_PROFILE_METRICS)
 	if (opt_debug) nvapi_pstateinfo(cgpu->gpu_id);
 #endif
 #endif
