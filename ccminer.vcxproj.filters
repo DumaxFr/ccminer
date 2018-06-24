@@ -621,6 +621,7 @@
     <ClInclude Include="Algo512\cuda_b_jh512.h" />
     <ClInclude Include="phi\cuda_phi2_skein512.h" />
     <ClInclude Include="phi\cuda_phi2.h" />
+    <ClInclude Include="Algo512\cuda_b_whirlpool.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda.cpp">
@@ -1013,6 +1014,7 @@
     <CudaCompile Include="phi\cuda_phi2_lyra2.cu" />
     <CudaCompile Include="phi\cuda_phi2_br_streebog_echo512.cu" />
     <CudaCompile Include="phi\phi2.cu" />
+    <CudaCompile Include="Algo512\cuda_b_whirlpool.cu" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ccminer.ico">

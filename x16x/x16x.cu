@@ -443,8 +443,9 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
         x11_simd512_cpu_init(thr_id, throughput); // 64
         cuda_base_echo512_cpu_init(thr_id);
         cuda_base_hamsi512_cpu_init();
-        x15_whirlpool_cpu_init(thr_id, throughput, 0);
-        x16_whirlpool512_init(thr_id, throughput);
+        //x15_whirlpool_cpu_init(thr_id, throughput, 0);
+        cuda_base_whirlpool_cpu_init();
+        x16_whirlpool512_init(thr_id, throughput); // 80
         cuda_base_sha512_cpu_init();
 
         CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t)64 * throughput), 0);
@@ -776,8 +777,13 @@ extern "C" int scanhash_x16x(int thr_id, struct work* work, uint32_t max_nonce, 
                     TRACE("shabal :");
                     break;
                 case WHIRLPOOL:
-                    x15_whirlpool_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], i);
-                    TRACE("shabal :");
+                    if (i == 15) {
+                        cudaHashFinalDone = true;
+                        cuda_base_whirlpool_cpu_hash_64f(throughput, d_hash[thr_id], pdata[19], d_x16ResNonce[thr_id], *(uint64_t*)&ptarget[6]);
+                    } else {
+                        cuda_base_whirlpool_cpu_hash_64(throughput, d_hash[thr_id]);
+                    }
+                    TRACE("whirlpool:");
                     break;
                 case SHA512:
                     if (i == 15) {
@@ -918,7 +924,7 @@ extern "C" void free_x16r(int thr_id) {
 
     quark_groestl512_cpu_free(thr_id);
     x11_simd512_cpu_free(thr_id);
-    x15_whirlpool_cpu_free(thr_id);
+    //x15_whirlpool_cpu_free(thr_id);
 
     cuda_check_cpu_free(thr_id);
 

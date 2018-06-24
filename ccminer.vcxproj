@@ -344,6 +344,7 @@
     <ClInclude Include="Algo512\cuda_b_shabal512.h" />
     <ClInclude Include="Algo512\cuda_b_shavite512.h" />
     <ClInclude Include="Algo512\cuda_b_skein512.h" />
+    <ClInclude Include="Algo512\cuda_b_whirlpool.h" />
     <ClInclude Include="cuda_uint2_utils.h" />
     <ClInclude Include="compat\pthreads\pthread.h" />
     <ClCompile Include="compat\winansi.c" />
@@ -415,6 +416,7 @@
     <CudaCompile Include="Algo512\cuda_b_shabal512.cu" />
     <CudaCompile Include="Algo512\cuda_b_skein512.cu" />
     <CudaCompile Include="Algo512\cuda_b_jh512.cu" />
+    <CudaCompile Include="Algo512\cuda_b_whirlpool.cu" />
     <CudaCompile Include="crypto\cryptolight.cu" />
     <CudaCompile Include="crypto\cryptolight-core.cu">
       <MaxRegCount>64</MaxRegCount>

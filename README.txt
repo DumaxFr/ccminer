@@ -1,5 +1,5 @@
 
-ccminer dumax-0.9.1 (June 19th 2018)                "Seed pack"
+ccminer dumax-0.9.2 (June 24th 2018)              "Reden'ption"
 ---------------------------------------------------------------
 
 ***************************************************************
@@ -9,6 +9,7 @@ If you find this tool useful and like to support its continuous
 DumaxFr@github:
   LUX  : LWcYLSx37F37gHjbmvhwQPQ8PhyDYibmpr
   RVN  : RQXpsvSaVrGYo4tyGityWDNBQMFcnqANyj
+  REDN : RFVNEtRzAfeCDphuh4f3gPhN7hdX71BtEH
   BTC  : 1AtQXFbnzYTsjzy2bzSH6nPGxqZ32NG42T
 		  
 tpruvot@github:
@@ -284,6 +285,9 @@ features.
 
 >>> RELEASE HISTORY <<<
 
+  June 24th 2018  dumax-0.9.2
+                  Improved x16r/x16s (Whirlpool-64f)
+				  
   June 19th 2018  dumax-0.9.1
                   Improved x16r/x16s (Keccak512-64)
 				  Added gpu temp colors (from BCT tpruvot's ccminer)
