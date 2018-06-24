@@ -795,6 +795,9 @@
     <CudaCompile Include="polytimos.cu">
       <Filter>Source Files\CUDA</Filter>
     </CudaCompile>
+    <CudaCompile Include="phi\cuda_phi2_cubehash512.cu">
+      <Filter>Source Files\CUDA\phi</Filter>
+    </CudaCompile>
     <CudaCompile Include="skunk\skunk.cu">
       <Filter>Source Files\CUDA\skunk</Filter>
     </CudaCompile>

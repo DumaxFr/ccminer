@@ -1,6 +1,7 @@
 //
-//  PHI2 algo
-//
+//  PHI2 algo (with smart contracts header)
+//  tpruvot May 2018
+//  DumaxFr June 2018
 //
 
 extern "C" {
@@ -24,6 +25,7 @@ static uint32_t* d_hash[MAX_GPUS];
 static uint32_t* d_resNonce[MAX_GPUS];
 static uint64_t* d_matrix[MAX_GPUS];
 
+static bool has_roots;
 
 extern "C" void phi2hash(void *output, const void *input)
 {
@@ -38,7 +40,7 @@ extern "C" void phi2hash(void *output, const void *input)
     sph_skein512_context ctx_skein;
 
     sph_cubehash512_init(&ctx_cubehash);
-	sph_cubehash512(&ctx_cubehash, (const void*)input, 80);
+	sph_cubehash512(&ctx_cubehash, (const void*)input, has_roots ? 144 : 80);
     sph_cubehash512_close(&ctx_cubehash, (void*)hashB);
 
     LYRA2(&hashA[ 0], 32, &hashB[ 0], 32, &hashB[ 0], 32, 1, 8, 8);
@@ -168,10 +170,12 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
 		init[thr_id] = true;
 	}
 
-	uint32_t endiandata[20];
-
-	for (int k = 0; k < 20; k++)
+	has_roots = false;
+	uint32_t endiandata[36];
+	for (int k = 0; k < 36; k++) {
 		be32enc(&endiandata[k], pdata[k]);
+		if (k >= 20 && pdata[k]) has_roots = true;
+	}
 
     cudaMemset(d_resNonce[thr_id], 0xFF, 2 * sizeof(uint32_t));
 
@@ -181,7 +185,11 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
     START_METRICS
     #endif // _PROFILE_METRICS_PHI
 
-	cuda_base_cubehash512_setBlock_80(endiandata);
+	if (has_roots)
+		cubehash512_setBlock_144(thr_id, endiandata);
+	else
+        cuda_base_cubehash512_setBlock_80(endiandata);
+
 
 	do {
 
@@ -192,8 +200,11 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
             metrics_do_first_start = true;
         }
         #endif // _PROFILE_METRICS_PHI
-		cuda_base_cubehash512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
-        TRACE("CubeHash512-80 : ")
+		if (has_roots)
+			cubehash512_cuda_hash_144(thr_id, throughput, pdata[19], d_hash_512[thr_id]);
+		else
+            cuda_base_cubehash512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
+        TRACE("CubeHash512-xxx: ")
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(0)
         
