@@ -3,6 +3,7 @@
 #include "cuda_vector_uint2x4.h"
 
 
+#define CUBEHASH512_TPB144 640
 #define CUBEHASH512_TPB80 640
 #define CUBEHASH512_TPB64 640
 #define CUBEHASH512_TPB64F 640
@@ -169,8 +170,11 @@ void cuda_base_cubehash512_cpu_hash_64f(const uint32_t threads, const uint32_t *
 
 #pragma region CubeHash512_80
 
-__constant__ static __align__(64) uint32_t precalc_x[32];
-__constant__ static __align__(64) uint32_t c_message[3];
+__constant__ static __align__(128) uint32_t precalc_x[32];
+// remaining message :
+// 80 - 12 bytes usefull (80 - 64 - nonce)
+// 144 - 80 bytes (144 - 64)
+__constant__ static __align__(128) uint32_t c_message[20];
 
 __host__
 void cuda_base_cubehash512_setBlock_80(uint32_t* endiandata) {
@@ -198,8 +202,7 @@ void cuda_base_cubehash512_setBlock_80(uint32_t* endiandata) {
     AS_UINT4(&message[0]) = AS_UINT4(&endiandata[16]);
 
 	cudaMemcpyToSymbol(precalc_x, x, sizeof(precalc_x), 0, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(c_message, message, sizeof(c_message), 0, cudaMemcpyHostToDevice);
-	//cudaMemcpyToSymbol(c_PaddedMessage80, endiandata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(c_message, message, 12, 0, cudaMemcpyHostToDevice);
 }
 
 __global__
@@ -237,6 +240,95 @@ __host__
 void cuda_base_cubehash512_cpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash) {
 
 	const uint32_t threadsperblock = CUBEHASH512_TPB80;
+	dim3 grid((threads + threadsperblock-1)/threadsperblock);
+	dim3 block(threadsperblock);
+
+	cuda_base_cubehash512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, d_hash);
+}
+
+#pragma endregion
+
+
+#pragma region Phi2_CubeHash512_144
+
+// device constants declared in CubeHash512_80
+
+__host__
+void cuda_phi2_cubehash512_setBlock_144(uint32_t* endiandata) {
+
+    uint32_t x[32] = {
+		0x2AEA2A61, 0x50F494D4, 0x2D538B8B, 0x4167D83E,
+		0x3FEE2313, 0xC701CF8C, 0xCC39968E, 0x50AC5695,
+		0x4D42C787, 0xA647A8B3, 0x97CF0BEF, 0x825B4537,
+		0xEEF864D2, 0xF22090C4, 0xD0E5CD33, 0xA23911AE,
+		0xFCD398D9, 0x148FE485, 0x1B017BEF, 0xB6444532,
+		0x6A536159, 0x2FF5781C, 0x91FA7934, 0x0DBADEA9,
+		0xD65C8A2B, 0xA5A70E75, 0xB1C62456, 0xBC796576,
+		0x1921C8F7, 0xE7989AF1, 0x7795D246, 0xD43E3B44
+    };
+
+    AS_UINT4(&x[0]) ^= AS_UINT4(&endiandata[0]);
+	AS_UINT4(&x[4]) ^= AS_UINT4(&endiandata[4]);
+	rrounds(x);
+
+	AS_UINT4(&x[0]) ^= AS_UINT4(&endiandata[8]);
+	AS_UINT4(&x[4]) ^= AS_UINT4(&endiandata[12]);
+	rrounds(x);
+
+	uint32_t message[20];
+    AS_UINT4(&message[0]) = AS_UINT4(&endiandata[16]);
+    AS_UINT4(&message[4]) = AS_UINT4(&endiandata[20]);
+    AS_UINT4(&message[8]) = AS_UINT4(&endiandata[24]);
+    AS_UINT4(&message[12]) = AS_UINT4(&endiandata[28]);
+    AS_UINT4(&message[16]) = AS_UINT4(&endiandata[32]);
+
+	cudaMemcpyToSymbol(precalc_x, x, sizeof(precalc_x), 0, cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(c_message, message, 80, 0, cudaMemcpyHostToDevice);
+}
+
+__global__
+__launch_bounds__(CUBEHASH512_TPB144, 2)
+void cuda_phi2_cubehash512_gpu_hash_144(const uint32_t threads, const uint32_t startNounce, uint32_t *g_outhash) {
+
+	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
+	if (thread < threads) {
+
+		uint32_t x[32];
+
+        *(uint2x4*)&x[0] = __ldg4((uint2x4*)&precalc_x[0]);
+		*(uint2x4*)&x[8] = __ldg4((uint2x4*)&precalc_x[8]);
+        *(uint2x4*)&x[16] = __ldg4((uint2x4*)&precalc_x[16]);
+		*(uint2x4*)&x[24] = __ldg4((uint2x4*)&precalc_x[24]);
+        
+        AS_UINT2(&x[0]) ^= __ldg((uint2*)&c_message[0]);
+        x[2] ^= c_message[2];
+        x[3] ^= cuda_swab32(startNounce + thread);
+        AS_UINT4(&x[4]) ^= __ldg((uint4*)&c_message[4]);
+   	    rrounds(x);
+
+        AS_UINT4(&x[0]) ^= __ldg((uint4*)&c_message[8]);
+        AS_UINT4(&x[4]) ^= __ldg((uint4*)&c_message[12]);
+   	    rrounds(x);
+
+        AS_UINT4(&x[0]) ^= __ldg((uint4*)&c_message[16]);
+        x[4] ^= 0x80u;
+   	    rrounds(x);
+
+	    x[31] ^= 1;
+	    #pragma unroll 10
+	    for (int i = 0; i < 10; i++)
+            rrounds(x);
+
+        uint32_t* outHash = &g_outhash[thread << 4];
+		*(uint2x4*)&outHash[0] = *(uint2x4*)&x[0];
+		*(uint2x4*)&outHash[8] = *(uint2x4*)&x[8];
+	}
+}
+
+__host__
+void cuda_phi2_cubehash512_cpu_hash_144(const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash) {
+
+	const uint32_t threadsperblock = CUBEHASH512_TPB144;
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 

@@ -25,7 +25,7 @@ static uint32_t* d_hash[MAX_GPUS];
 static uint32_t* d_resNonce[MAX_GPUS];
 static uint64_t* d_matrix[MAX_GPUS];
 
-static bool has_roots;
+static __thread bool has_roots;
 
 extern "C" void phi2hash(void *output, const void *input)
 {
@@ -186,7 +186,7 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
     #endif // _PROFILE_METRICS_PHI
 
 	if (has_roots)
-		cubehash512_setBlock_144(thr_id, endiandata);
+        cuda_phi2_cubehash512_setBlock_144(endiandata);
 	else
         cuda_base_cubehash512_setBlock_80(endiandata);
 
@@ -201,7 +201,7 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
         }
         #endif // _PROFILE_METRICS_PHI
 		if (has_roots)
-			cubehash512_cuda_hash_144(thr_id, throughput, pdata[19], d_hash_512[thr_id]);
+            cuda_phi2_cubehash512_cpu_hash_144(throughput, pdata[19], d_hash[thr_id]);
 		else
             cuda_base_cubehash512_cpu_hash_80(throughput, pdata[19], d_hash[thr_id]);
         TRACE("CubeHash512-xxx: ")

@@ -71,7 +71,7 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  quark/quarkcoin.cu quark/cuda_quark_compactionTest.cu \
 			  neoscrypt/neoscrypt.cpp neoscrypt/neoscrypt-cpu.c neoscrypt/cuda_neoscrypt.cu \
 			  pentablake.cu skein.cu cuda_skeincoin.cu skein2.cpp zr5.cu \
-			  phi/cuda_phi2_br_streebog_echo512.cu phi/cuda_phi2_cubehash512.cu phi/cuda_phi2_lyra2.cu \
+			  phi/cuda_phi2_br_streebog_echo512.cu phi/cuda_phi2_lyra2.cu \
 			  phi/cuda_phi2_skein512.cu phi/phi.cu phi/phi2.cu \
 			  skunk/skunk.cu skunk/cuda_skunk.cu skunk/cuda_skunk_streebog.cu \
 			  sha256/sha256d.cu sha256/cuda_sha256d.cu sha256/sha256t.cu sha256/cuda_sha256t.cu \
