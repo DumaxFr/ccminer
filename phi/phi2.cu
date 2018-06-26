@@ -21,9 +21,14 @@ extern "C" {
 #include <stdio.h>
 #include <memory.h>
 
+extern void lyra2_cpu_init(int thr_id, uint32_t threads, uint64_t *d_matrix);
+extern void lyra2_cuda_hash_64(int thr_id, const uint32_t threads, uint64_t* d_hash_256, uint32_t* d_hash_512, bool gtx750ti);
+
+
 static uint32_t* d_hash[MAX_GPUS];
 static uint32_t* d_resNonce[MAX_GPUS];
 static uint64_t* d_matrix[MAX_GPUS];
+static uint32_t* d_brFlag[MAX_GPUS];
 
 static __thread bool has_roots;
 
@@ -160,11 +165,12 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
 		quark_skein512_cpu_init(thr_id, throughput);
         cuda_base_echo512_cpu_init(thr_id);
 
-		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t)64 * throughput), -1);
-		CUDA_SAFE_CALL(cudaMalloc(&d_resNonce[thr_id], MAX_NONCES * sizeof(uint32_t)));
-
 		size_t matrix_sz = sizeof(uint64_t) * 4 * 4;
-		CUDA_SAFE_CALL(cudaMalloc(&d_matrix[thr_id], matrix_sz * throughput));
+		CUDA_CALL_OR_RET_X(cudaMalloc(&d_matrix[thr_id], matrix_sz * throughput), -1);
+		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t)64 * throughput), -1);
+		CUDA_CALL_OR_RET_X(cudaMalloc(&d_resNonce[thr_id], MAX_NONCES * sizeof(uint32_t)), -1);
+		CUDA_CALL_OR_RET_X(cudaMalloc(&d_brFlag[thr_id], throughput * sizeof(uint32_t)), -1);
+
         cuda_phi2_lyra2_cpu_init(d_matrix[thr_id]);
 
 		init[thr_id] = true;
@@ -224,7 +230,7 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
         
         START_METRICS
         #endif // _PROFILE_METRICS_PHI
-        cuda_phi2_branhc_streeb_echo512_cpu_hash_64(throughput, d_hash[thr_id]);
+        cuda_phi2_br_stree_echo_cpu_hash_64(throughput, d_hash[thr_id], d_brFlag[thr_id]);
         TRACE("Brnch StreeEcho: ")
         #ifdef _PROFILE_METRICS_PHI
         STOP_METRICS(3)
