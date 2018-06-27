@@ -21,9 +21,6 @@ extern "C" {
 #include <stdio.h>
 #include <memory.h>
 
-extern void lyra2_cpu_init(int thr_id, uint32_t threads, uint64_t *d_matrix);
-extern void lyra2_cuda_hash_64(int thr_id, const uint32_t threads, uint64_t* d_hash_256, uint32_t* d_hash_512, bool gtx750ti);
-
 
 static uint32_t* d_hash[MAX_GPUS];
 static uint32_t* d_resNonce[MAX_GPUS];
@@ -138,8 +135,8 @@ extern "C" int scanhash_phi2(int thr_id, struct work* work, uint32_t max_nonce, 
 	const uint32_t first_nonce = pdata[19];
 	const int dev_id = device_map[thr_id];
 
-	int intensity = (device_sm[dev_id] >= 500 && !is_windows()) ? 16 : 15;
-	if (device_sm[dev_id] >= 600) intensity = 16;
+	int intensity = (device_sm[dev_id] >= 600 && !is_windows()) ? 19 : 18;
+	if (strstr(device_name[dev_id], "GTX 1080")) intensity = 19;
 
     // least common multiple of all algo TPBs
     uint32_t lcm = 7680; // should be calculated by a cuda_get_lcm function
