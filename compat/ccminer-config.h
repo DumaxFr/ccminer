@@ -164,7 +164,7 @@
 #define PACKAGE_URL "https://github.com/DumaxFr/ccminer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "dumax-0.9.2"
+#define PACKAGE_VERSION "dumax-0.9.3"
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be

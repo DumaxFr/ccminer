@@ -1,5 +1,5 @@
 
-ccminer dumax-0.9.2 (June 24th 2018)              "Reden'ption"
+ccminer dumax-0.9.3 (June 29th 2018)              "Phi2nally ?"
 ---------------------------------------------------------------
 
 ***************************************************************
@@ -285,6 +285,9 @@ features.
 
 >>> RELEASE HISTORY <<<
 
+  June 29th 2018  dumax-0.9.3
+                  Phi2 revised for smart contracts
+				  
   June 24th 2018  dumax-0.9.2
                   Improved x16r/x16s (Whirlpool-64f)
 				  
