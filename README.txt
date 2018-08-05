@@ -1,5 +1,5 @@
 
-ccminer dumax-0.9.3 (June 29th 2018)              "Phi2nally ?"
+ccminer dumax-0.9.4 (August 6th 2018)                    "Phix"
 ---------------------------------------------------------------
 
 ***************************************************************
@@ -7,7 +7,7 @@ If you find this tool useful and like to support its continuous
           development, then consider a donation.
 
 DumaxFr@github:
-  LUX  : LWcYLSx37F37gHjbmvhwQPQ8PhyDYibmpr
+  LUX  : LPp65j9LoAsqRZzEZVX3EHtk9QVGvMUAxB
   RVN  : RQXpsvSaVrGYo4tyGityWDNBQMFcnqANyj
   REDN : RFVNEtRzAfeCDphuh4f3gPhN7hdX71BtEH
   BTC  : 1AtQXFbnzYTsjzy2bzSH6nPGxqZ32NG42T
@@ -285,6 +285,9 @@ features.
 
 >>> RELEASE HISTORY <<<
 
+  Aug. 6th 2018   dumax-0.9.4
+                  Phi2 fixed my mistake 
+				  
   June 29th 2018  dumax-0.9.3
                   Phi2 revised for smart contracts
 				  

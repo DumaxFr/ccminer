@@ -3910,7 +3910,7 @@ int main(int argc, char *argv[])
         printf("  Originally based on Christian Buchner and Christian H. project\n");
         printf("  Include some kernels from alexis78, djm34, djEzo, tsiv and krnlx.\n\n");
         printf("BTC donation address: 1AJdfCpLWPNoAMDfHF1wD5y8VgKSSTHxPo (tpruvot)\n\n");
-        printf("LUX donation address: LWcYLSx37F37gHjbmvhwQPQ8PhyDYibmpr (DumaxFr)\n");
+        printf("LUX donation address: LPp65j9LoAsqRZzEZVX3EHtk9QVGvMUAxB (DumaxFr)\n");
         printf("RVN donation address: RQXpsvSaVrGYo4tyGityWDNBQMFcnqANyj (DumaxFr)\n");
         printf("BTC donation address: 1AtQXFbnzYTsjzy2bzSH6nPGxqZ32NG42T (DumaxFr)\n\n\n");
     }

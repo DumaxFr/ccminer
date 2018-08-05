@@ -332,7 +332,7 @@ void cuda_phi2_cubehash512_cpu_hash_144(const uint32_t threads, const uint32_t s
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 
-	cuda_base_cubehash512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, d_hash);
+	cuda_phi2_cubehash512_gpu_hash_144 <<<grid, block>>> (threads, startNounce, d_hash);
 }
 
 #pragma endregion
